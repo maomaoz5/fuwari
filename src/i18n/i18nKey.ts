@@ -5,6 +5,11 @@ enum I18nKey {
 	search = "search",
 
 	tags = "tags",
+	aiSummary = "aiSummary",
+	aiSummaryError = "aiSummaryError",
+	aiSummaryGeneratedBy = "aiSummaryGeneratedBy",
+	aiSummaryLoading = "aiSummaryLoading",
+	aiSummaryNoSummary = "aiSummaryNoSummary",
 	categories = "categories",
 	recentPosts = "recentPosts",
 

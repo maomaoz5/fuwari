@@ -8,6 +8,11 @@ export const zh_CN: Translation = {
 	[Key.search]: "搜索",
 
 	[Key.tags]: "标签",
+	[Key.aiSummary]: "AI 总结",
+	[Key.aiSummaryError]: "生成总结失败",
+	[Key.aiSummaryGeneratedBy]: "由 AI 生成",
+	[Key.aiSummaryLoading]: "正在生成总结...",
+	[Key.aiSummaryNoSummary]: "暂无 AI 总结",
 	[Key.categories]: "分类",
 	[Key.recentPosts]: "最新文章",
 

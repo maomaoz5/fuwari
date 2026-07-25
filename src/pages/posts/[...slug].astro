@@ -9,7 +9,8 @@ import { getSortedPosts } from "@utils/content-utils";
 import { getDir, getPostUrlBySlug } from "@utils/url-utils";
 import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
-import { licenseConfig } from "src/config";
+import { licenseConfig, aiSummaryConfig } from "src/config";
+import AiSummaryModal from "@/components/AiSummaryModal.svelte";
 import ImageWrapper from "../../components/misc/ImageWrapper.astro";
 import PostMetadata from "../../components/PostMeta.astro";
 import { profileConfig, siteConfig } from "../../config";
@@ -74,6 +75,7 @@ const jsonLd = {
                         {remarkPluginFrontmatter.minutes} {" " + i18n(remarkPluginFrontmatter.minutes === 1 ? I18nKey.minuteCount : I18nKey.minutesCount)}
                     </div>
                 </div>
+
             </div>
 
             <!-- title -->
@@ -108,6 +110,8 @@ const jsonLd = {
                 <ImageWrapper id="post-cover" src={entry.data.image} basePath={path.join("content/posts/", getDir(entry.id))} class="mb-8 rounded-xl banner-container onload-animation"/>
             }
 
+
+            {aiSummaryConfig.enable && <AiSummaryModal client:load slug={entry.id} />}
 
             <Markdown class="mb-6 markdown-content onload-animation">
                 <Content />

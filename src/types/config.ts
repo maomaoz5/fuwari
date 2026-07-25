@@ -1,4 +1,4 @@
-import type { AUTO_MODE, DARK_MODE, LIGHT_MODE } from "@constants/constants";
+import type { AUTO_MODE, DARK_MODE, LIGHT_MODE } from "../constants/constants.ts";
 
 export type SiteConfig = {
 	title: string;
@@ -44,11 +44,12 @@ export type Favicon = {
 	sizes?: string;
 };
 
-export enum LinkPreset {
-	Home = 0,
-	Archive = 1,
-	About = 2,
-}
+export const LinkPreset = {
+	Home: 0,
+	Archive: 1,
+	About: 2,
+} as const;
+export type LinkPreset = (typeof LinkPreset)[keyof typeof LinkPreset];
 
 export type NavBarLink = {
 	name: string;
@@ -99,4 +100,10 @@ export type BlogPostData = {
 
 export type ExpressiveCodeConfig = {
 	theme: string;
+};
+
+export type AiSummaryConfig = {
+	enable: boolean;
+	model: string;
+	maxTokens: number;
 };
