@@ -332,16 +332,16 @@ function initPostCardReveal() {
 		const revealObserver = new IntersectionObserver((entries) => {
 			entries.forEach((entry) => {
 				if (entry.isIntersecting) {
-					entry.target.style.opacity = '1';
-					entry.target.style.transform = 'translateY(0)';
+					(entry.target as HTMLElement).style.opacity = '1';
+					(entry.target as HTMLElement).style.transform = 'translateY(0)';
 					revealObserver.unobserve(entry.target);
 				}
 			});
 		}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 		revealCards.forEach((card, i) => {
-			card.style.opacity = '0';
-			card.style.transform = 'translateY(1.5rem)';
-			card.style.transition = `opacity 0.4s ease ${i * 0.08}s, transform 0.4s ease ${i * 0.08}s`;
+			(card as HTMLElement).style.opacity = '0';
+			(card as HTMLElement).style.transform = 'translateY(1.5rem)';
+			(card as HTMLElement).style.transition = `opacity 0.4s ease ${i * 0.08}s, transform 0.4s ease ${i * 0.08}s`;
 			revealObserver.observe(card);
 		});
 	}
