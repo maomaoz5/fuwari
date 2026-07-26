@@ -1,0 +1,6 @@
+{
+  "title": "",
+  "summary": "这篇文章分享了五个提升前端开发效率的实用技巧。首先，使用可选链操作符（?.）可以简化嵌套属性的访问，避免重复的空值检查。其次，利用原生的 `structuredClone` 替代 JSON 系列序列化实现更完整的深拷贝，支持 Date、RegExp 等特殊类型。接着，CSS 容器查询（container-type）让组件基于自身尺寸而非视口宽度自适应布局。随后，通过 `AbortController` 在组件挂载或页面切换时取消未完成的请求，防止内存泄漏。最后，使用 `console.table` 对结构化数据进行可视化调试，提高查看效率。",
+  "generatedAt": "2026-07-25T16:06:06.223Z",
+  "contentHash": "1e04dcaaf2b80648bda90f80aa2fae5c9bc553d7ae9a05777ba528e77c470d41"
+}

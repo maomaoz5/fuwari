@@ -1,0 +1,6 @@
+{
+  "title": "",
+  "summary": "博客介绍了 Biome，一款用 Rust 编写的高性能前端工具链，能够统一 ESLint、Prettier 与 stylelint 的功能，提供 Linter、Formatter 与 Import Sorter。与传统工具组合相比，Biome ässä速度提升 30‑40 倍，成本更低，配置更简洁；安装后仅需一份 biome.json，脚本可以直接执行 lint 与 format。作者提到对多数项目而言，Biome 的规则已覆盖 ESLint 推荐规则，且可通过插件桥接特定 ESLint 规则；格式化输出与 Prettier 兼容，迁移成本极低。通过 VS Code 与 JetBrains 的官方插件，编辑器可实现保存自动格式化。总的来说，Biome 是不需要复杂插件生态时的快速、统一并Penned工具链替代方案，有助于降低维护成本并提升团队协作效率。",
+  "generatedAt": "2026-07-25T16:06:00.790Z",
+  "contentHash": "80b3708a3ce4b42a969dbcd9d030e2a2fd343a96b08187c3e5d242eebdaf4bfa"
+}
