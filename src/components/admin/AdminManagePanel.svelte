@@ -178,7 +178,7 @@ async function handleDelete(username) {
           <input
             type="text"
             bind:value={newUsername}
-            class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             placeholder="输入用户名"
           />
         </div>
@@ -188,7 +188,7 @@ async function handleDelete(username) {
             type="password"
             bind:value={newPassword}
             on:keydown={(e) => e.key === 'Enter' && handleCreate()}
-            class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             placeholder="至少 6 个字符"
           />
         </div>
@@ -259,7 +259,7 @@ async function handleDelete(username) {
                       type="password"
                       bind:value={newPasswordInput}
                       on:keydown={(e) => e.key === 'Enter' && handleChangePassword()}
-                      class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                       placeholder="新密码（至少 6 字符）"
                     />
                     <button

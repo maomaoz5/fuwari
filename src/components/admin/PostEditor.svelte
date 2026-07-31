@@ -170,7 +170,7 @@ onMount(() => {
               <input
                 type="text"
                 bind:value={newSlug}
-                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 placeholder="my-new-post"
               />
             </div>
@@ -183,7 +183,7 @@ onMount(() => {
             <textarea
               bind:value={content}
               rows="24"
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-y"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono text-sm resize-y"
               placeholder="在这里输入 Markdown 内容..."
             ></textarea>
           </div>
@@ -200,7 +200,7 @@ onMount(() => {
             <input
               type="text"
               bind:value={title}
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder="文章标题"
             />
           </div>
@@ -210,7 +210,7 @@ onMount(() => {
             <input
               type="date"
               bind:value={published}
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -219,7 +219,7 @@ onMount(() => {
             <textarea
               bind:value={description}
               rows="3"
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder="文章描述..."
             ></textarea>
           </div>
@@ -229,7 +229,7 @@ onMount(() => {
             <input
               type="text"
               bind:value={tagsStr}
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder="tag1, tag2, tag3"
             />
           </div>
@@ -239,7 +239,7 @@ onMount(() => {
             <input
               type="text"
               bind:value={category}
-              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
               placeholder="分类名称"
             />
           </div>

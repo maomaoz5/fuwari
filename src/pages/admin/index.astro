@@ -9,9 +9,7 @@ export const prerender = false;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理面板 - 登录</title>
     <style is:global>
-        @tailwind base;
-        @tailwind components;
-        @tailwind utilities;
+        @import "tailwindcss";
     </style>
 </head>
 <body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -30,7 +28,7 @@ export const prerender = false;
                         id="username"
                         name="username"
                         required
-                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         placeholder="请输入用户名"
                     />
                 </div>
@@ -43,7 +41,7 @@ export const prerender = false;
                         id="password"
                         name="password"
                         required
-                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                         placeholder="请输入密码"
                     />
                 </div>

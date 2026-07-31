@@ -1,7 +1,7 @@
 import node from "@astrojs/node";
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
-import tailwind from "@astrojs/tailwind";
+import tailwindcss from "@tailwindcss/vite";
 import { unified } from "@astrojs/markdown-remark";
 import { pluginCollapsibleSections } from "@expressive-code/plugin-collapsible-sections";
 import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
@@ -35,9 +35,6 @@ export default defineConfig({
 	trailingSlash: "always",
 	compressHTML: true, // Maintain Astro 5 whitespace behavior
 	integrations: [
-		tailwind({
-			nesting: true,
-		}),
 		swup({
 			theme: false,
 			animationClass: "transition-swup-", // see https://swup.js.org/options/#animationselector
@@ -162,6 +159,9 @@ export default defineConfig({
 		}),
 	},
 	vite: {
+		plugins: [
+			tailwindcss(),
+		],
 		build: {
 			cssMinify: 'esbuild', // Use esbuild for CSS minification - lightningcss doesn't handle Stylus nesting
 			rollupOptions: {
