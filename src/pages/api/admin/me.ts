@@ -1,6 +1,8 @@
 import type { APIRoute } from "astro";
 import { getSessionToken, validateSession } from "@/utils/admin/auth";
 
+export const prerender = false;
+
 export const GET: APIRoute = async ({ request }) => {
 	const token = getSessionToken(request);
 	if (!token) {
