@@ -1,10 +1,10 @@
 export const prerender = true;
 
+import type { CollectionEntry } from "astro:content";
 import rss from "@astrojs/rss";
 import { getSortedPosts } from "@utils/content-utils";
 import { url } from "@utils/url-utils";
 import type { APIContext } from "astro";
-import type { CollectionEntry } from "astro:content";
 import MarkdownIt from "markdown-it";
 import sanitizeHtml from "sanitize-html";
 import { siteConfig } from "@/config";
