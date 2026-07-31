@@ -1,6 +1,5 @@
-@import "tailwindcss";
-
 @custom-variant dark (&:where(.dark, .dark *));
+@import "tailwindcss";
 
 @theme {
   --font-sans: "Roboto", sans-serif, ui-sans-serif, system-ui, sans-serif;
