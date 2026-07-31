@@ -4,6 +4,7 @@ import rss from "@astrojs/rss";
 import { getSortedPosts } from "@utils/content-utils";
 import { url } from "@utils/url-utils";
 import type { APIContext } from "astro";
+import type { CollectionEntry } from "astro:content";
 import MarkdownIt from "markdown-it";
 import sanitizeHtml from "sanitize-html";
 import { siteConfig } from "@/config";
@@ -25,7 +26,7 @@ export async function GET(context: APIContext) {
 		title: siteConfig.title,
 		description: siteConfig.subtitle || "No description",
 		site: context.site ?? "https://fuwari.vercel.app",
-		items: blog.map((post) => {
+		items: blog.map((post: CollectionEntry<"posts">) => {
 			const content =
 				typeof post.body === "string" ? post.body : String(post.body || "");
 			const cleanedContent = stripInvalidXmlChars(content);
