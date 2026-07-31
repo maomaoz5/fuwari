@@ -1,4 +1,8 @@
-import { clearSession, clearSessionCookie, getSessionToken } from "@utils/admin/auth";
+import {
+	clearSession,
+	clearSessionCookie,
+	getSessionToken,
+} from "@utils/admin/auth";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
