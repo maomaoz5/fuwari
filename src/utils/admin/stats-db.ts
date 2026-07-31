@@ -1,7 +1,6 @@
 import { type DbDriver } from "./db-interface";
 
 const DB_TYPE =
-  // @ts-expect-error - import.meta.env is available at runtime
   import.meta.env?.DB_TYPE || process.env.DB_TYPE || "sqlite";
 
 let driver: DbDriver | null = null;

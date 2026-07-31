@@ -1,30 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-	type changePassword as ChangePasswordFn,
-	type createAdmin as CreateAdminFn,
-	closeDb,
-	type deleteAdmin as DeleteAdminFn,
-	type listAdmins as ListAdminsFn,
 	resetAdminsForTesting,
-	type verifyAdmin as VerifyAdminFn,
+	createAdmin,
+	verifyAdmin,
+	listAdmins,
+	changePassword,
+	deleteAdmin,
 } from "../admin/stats-db";
-
-// 动态导入管理员函数
-let createAdmin: CreateAdminFn;
-let verifyAdmin: VerifyAdminFn;
-let listAdmins: ListAdminsFn;
-let changePassword: ChangePasswordFn;
-let deleteAdmin: DeleteAdminFn;
 
 describe("Admin management", () => {
 	beforeEach(async () => {
-		// 动态导入
-		const mod = await import("../admin/stats-db");
-		createAdmin = mod.createAdmin;
-		verifyAdmin = mod.verifyAdmin;
-		listAdmins = mod.listAdmins;
-		changePassword = mod.changePassword;
-		deleteAdmin = mod.deleteAdmin;
 		// 重置管理员表，确保干净状态
 		await resetAdminsForTesting();
 	});
@@ -52,7 +37,7 @@ describe("Admin management", () => {
 
 		const admins = await listAdmins();
 		expect(admins.length).toBe(2);
-		expect(admins.some((a) => a.username === "testuser")).toBe(true);
+		expect(admins.some((a: { username: string }) => a.username === "testuser")).toBe(true);
 	});
 
 	it("should not create duplicate admin", async () => {

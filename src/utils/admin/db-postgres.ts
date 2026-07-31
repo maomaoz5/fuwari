@@ -31,7 +31,6 @@ export class PostgresDriver implements DbDriver {
     if (this.pool) return this.pool;
 
     const connectionString =
-      // @ts-expect-error - import.meta.env is available at runtime
       import.meta.env?.DATABASE_URL || process.env.DATABASE_URL;
 
     if (!connectionString) {
