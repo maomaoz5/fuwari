@@ -1,0 +1,13 @@
+diff --git a/dist/cli/dev/background.js b/dist/cli/dev/background.js
+index 5882ef3ae971c93c11609a7d427cbbc4ae4b95c1..fba476689d1b8bcc339f9b15e6fc9c1fbe6e604f 100644
+--- a/dist/cli/dev/background.js
++++ b/dist/cli/dev/background.js
+@@ -77,7 +77,7 @@ async function background({
+     logger.error("SKIP_FORMAT", "Failed to spawn background dev server process.");
+     process.exit(1);
+   }
+-  const timeout = 3e4;
++  const timeout = 9e4;
+   const deadline = Date.now() + timeout;
+   while (Date.now() < deadline) {
+     if (!isProcessAlive(childPid)) {
