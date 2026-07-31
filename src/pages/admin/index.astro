@@ -1,5 +1,6 @@
 ---
 export const prerender = false;
+import "../../styles/main.css";
 ---
 
 <!DOCTYPE html>
@@ -9,7 +10,7 @@ export const prerender = false;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理面板 - 登录</title>
     <style is:global>
-        @import "tailwindcss";
+        @reference "tailwindcss";
     </style>
 </head>
 <body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
