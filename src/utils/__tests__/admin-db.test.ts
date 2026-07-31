@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
-	resetAdminsForTesting,
-	createAdmin,
-	verifyAdmin,
-	listAdmins,
 	changePassword,
+	createAdmin,
 	deleteAdmin,
+	listAdmins,
+	resetAdminsForTesting,
+	verifyAdmin,
 } from "../admin/stats-db";
 
 describe("Admin management", () => {
@@ -37,7 +37,9 @@ describe("Admin management", () => {
 
 		const admins = await listAdmins();
 		expect(admins.length).toBe(2);
-		expect(admins.some((a: { username: string }) => a.username === "testuser")).toBe(true);
+		expect(
+			admins.some((a: { username: string }) => a.username === "testuser"),
+		).toBe(true);
 	});
 
 	it("should not create duplicate admin", async () => {
