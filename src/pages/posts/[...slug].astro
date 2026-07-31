@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import { render } from "astro:content";
 import path from "node:path";
 import License from "@components/misc/License.astro";
@@ -151,4 +153,12 @@ const jsonLd = {
         </a>
     </div>
 
+    <script is:inline>
+      // 记录文章访问
+      fetch('/api/stats/record/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'article', slug: window.location.pathname.split('/').filter(Boolean).pop() }),
+      }).catch(() => {});
+    </script>
 </MainGridLayout>

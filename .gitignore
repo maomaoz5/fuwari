@@ -34,3 +34,13 @@ yarn.lock
 screenshot-*.png
 *.canvas.status.json
 *.canvas.tsx
+
+# admin data
+data/config-overrides.json
+data/stats.db
+data/stats.db-journal
+
+# PM2 logs
+logs/
+*.error.log
+*.out.log

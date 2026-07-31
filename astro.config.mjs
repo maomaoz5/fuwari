@@ -1,3 +1,4 @@
+import node from "@astrojs/node";
 import sitemap from "@astrojs/sitemap";
 import svelte from "@astrojs/svelte";
 import tailwind from "@astrojs/tailwind";
@@ -28,6 +29,7 @@ import aiSummary from "./src/integrations/ai-summary.ts";
 
 // https://astro.build/config
 export default defineConfig({
+	adapter: node({ mode: "standalone" }),
 	site: "https://fuwari.vercel.app/",
 	base: "/",
 	trailingSlash: "always",

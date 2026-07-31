@@ -1,0 +1,106 @@
+---
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板 - 登录</title>
+    <style is:global>
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+    <div class="w-full max-w-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+            <h1 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
+                管理面板
+            </h1>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        用户名
+                    </label>
+                    <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        required
+                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="请输入用户名"
+                    />
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        密码
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="请输入密码"
+                    />
+                </div>
+                <p id="error-msg" class="text-red-500 text-sm mb-4 hidden">用户名或密码错误</p>
+                <button
+                    type="submit"
+                    id="login-btn"
+                    class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
+                >
+                    登录
+                </button>
+            </form>
+        </div>
+        <p class="text-center text-gray-500 dark:text-gray-400 text-sm mt-4">
+            仅限管理员访问
+        </p>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form') as HTMLFormElement;
+        const errorMsg = document.getElementById('error-msg') as HTMLParagraphElement;
+        const loginBtn = document.getElementById('login-btn') as HTMLButtonElement;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = (document.getElementById('username') as HTMLInputElement).value.trim();
+            const password = (document.getElementById('password') as HTMLInputElement).value;
+            if (!username || !password) return;
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = '登录中...';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/admin/auth/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('admin_token', data.token);
+                    window.location.href = '/admin/dashboard/';
+                } else {
+                    const errData = await res.json().catch(() => null);
+                    errorMsg.textContent = errData?.error || '用户名或密码错误';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch {
+                errorMsg.textContent = '网络错误，请重试';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
+        });
+    </script>
+</body>
+</html>

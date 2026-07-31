@@ -161,6 +161,18 @@ const bannerOffset =
 		<ConfigCarrier></ConfigCarrier>
 		<slot />
 
+		<script is:inline>
+			// 记录页面访问（排除管理面板和 API）
+			const path = window.location.pathname;
+			if (!path.startsWith('/admin') && !path.startsWith('/api')) {
+				fetch('/api/stats/record/', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ type: 'page', path }),
+				}).catch(() => {});
+			}
+		</script>
+
 		<!-- increase the page height during page transition to prevent the scrolling animation from jumping -->
 		<div id="page-height-extend" class="hidden h-[300vh]"></div>
 	</body>
