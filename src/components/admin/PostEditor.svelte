@@ -1,11 +1,10 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
 export let slug = "";
 
 let isNew = !slug;
-let loading = isNew ? false : true;
+let loading = !isNew;
 let saving = false;
 let error = "";
 let success = "";
@@ -25,9 +24,7 @@ async function loadPost() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/posts/${slug}/`, {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch(`/api/admin/posts/${slug}/`);
 		if (res.status === 401) {
 			error = "认证已过期";
 			return;
@@ -42,7 +39,7 @@ async function loadPost() {
 		category = data.category || "";
 		draft = data.draft || false;
 	} catch (e) {
-		error = "加载文章失败: " + e.message;
+		error = `加载文章失败: ${e.message}`;
 	} finally {
 		loading = false;
 	}
@@ -78,7 +75,6 @@ async function savePost() {
 			res = await fetch("/api/admin/posts/", {
 				method: "POST",
 				headers: {
-					Authorization: `Bearer ${token}`,
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
@@ -92,7 +88,6 @@ async function savePost() {
 			res = await fetch(`/api/admin/posts/${slug}`, {
 				method: "PUT",
 				headers: {
-					Authorization: `Bearer ${token}`,
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({ content, frontmatter }),
@@ -109,7 +104,7 @@ async function savePost() {
 			navigate("#posts");
 		}, 800);
 	} catch (e) {
-		error = "保存失败: " + e.message;
+		error = `保存失败: ${e.message}`;
 	} finally {
 		saving = false;
 	}

@@ -1,11 +1,15 @@
 import { unauthorizedResponse, validateAuth } from "@utils/admin/auth";
+import {
+	safeHandleError,
+	validatePasswordStrength,
+} from "@utils/admin/security";
 import { createAdmin, listAdmins } from "@utils/admin/stats-db";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	if (!validateAuth(request).valid) return unauthorizedResponse();
 
 	try {
 		const admins = await listAdmins();
@@ -14,21 +18,12 @@ export const GET: APIRoute = async ({ request }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to list admins",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "GET /api/admin/admins");
 	}
 };
 
 export const POST: APIRoute = async ({ request }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	if (!validateAuth(request).valid) return unauthorizedResponse();
 
 	try {
 		const body = await request.json();
@@ -46,14 +41,12 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		}
 
-		if (password.length < 6) {
-			return new Response(
-				JSON.stringify({ error: "Password must be at least 6 characters" }),
-				{
-					status: 400,
-					headers: { "Content-Type": "application/json" },
-				},
-			);
+		const strengthCheck = validatePasswordStrength(password);
+		if (!strengthCheck.valid) {
+			return new Response(JSON.stringify({ error: strengthCheck.error }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		const success = await createAdmin(username, password);
@@ -74,15 +67,6 @@ export const POST: APIRoute = async ({ request }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to create admin",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "POST /api/admin/admins");
 	}
 };

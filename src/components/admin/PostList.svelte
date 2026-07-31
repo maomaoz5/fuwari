@@ -1,8 +1,6 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
-
 let posts = [];
 let loading = true;
 let error = "";
@@ -11,13 +9,10 @@ let deleting = false;
 let mounted = false;
 
 async function loadPosts() {
-	if (!token) return;
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/posts/", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch("/api/admin/posts/");
 		if (res.status === 401) {
 			error = "认证已过期，请重新登录";
 			return;
@@ -25,7 +20,7 @@ async function loadPosts() {
 		if (!res.ok) throw new Error("Failed to load posts");
 		posts = await res.json();
 	} catch (e) {
-		error = "加载文章失败: " + e.message;
+		error = `加载文章失败: ${e.message}`;
 	} finally {
 		loading = false;
 	}
@@ -57,13 +52,12 @@ async function doDelete() {
 	try {
 		const res = await fetch(`/api/admin/posts/${deleteTarget.slug}/`, {
 			method: "DELETE",
-			headers: { Authorization: `Bearer ${token}` },
 		});
 		if (!res.ok) throw new Error("Failed to delete");
 		posts = posts.filter((p) => p.slug !== deleteTarget.slug);
 		deleteTarget = null;
 	} catch (e) {
-		error = "删除失败: " + e.message;
+		error = `删除失败: ${e.message}`;
 	} finally {
 		deleting = false;
 	}
@@ -73,8 +67,8 @@ onMount(() => {
 	mounted = true;
 });
 
-// 当 token 存在且组件已挂载时加载文章
-$: if (mounted && token) loadPosts();
+// 当组件已挂载时加载文章
+$: if (mounted) loadPosts();
 </script>
 
 <div>

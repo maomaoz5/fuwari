@@ -1,6 +1,11 @@
 import crypto from "node:crypto";
 import pg from "pg";
 import type { DbDriver } from "./db-interface";
+import {
+	PBKDF2_ITERATIONS,
+	PBKDF2_ITERATIONS_OLD,
+	validatePasswordStrength,
+} from "./security";
 
 // ========== 密码哈希工具 ==========
 
@@ -10,7 +15,7 @@ function hashPassword(
 ): { hash: string; salt: string } {
 	const useSalt = salt || crypto.randomBytes(16).toString("hex");
 	const hash = crypto
-		.pbkdf2Sync(password, useSalt, 10000, 64, "sha512")
+		.pbkdf2Sync(password, useSalt, PBKDF2_ITERATIONS, 64, "sha512")
 		.toString("hex");
 	return { hash, salt: useSalt };
 }
@@ -19,9 +24,20 @@ function verifyPassword(
 	password: string,
 	storedHash: string,
 	salt: string,
-): boolean {
-	const { hash } = hashPassword(password, salt);
-	return hash === storedHash;
+): { valid: boolean; needsUpgrade: boolean } {
+	// 先用新参数验证
+	const newHash = crypto
+		.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, 64, "sha512")
+		.toString("hex");
+	if (newHash === storedHash) return { valid: true, needsUpgrade: false };
+
+	// 再用旧参数验证（透明升级）
+	const oldHash = crypto
+		.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS_OLD, 64, "sha512")
+		.toString("hex");
+	if (oldHash === storedHash) return { valid: true, needsUpgrade: true };
+
+	return { valid: false, needsUpgrade: false };
 }
 
 export class PostgresDriver implements DbDriver {
@@ -90,6 +106,15 @@ export class PostgresDriver implements DbDriver {
 	}
 
 	private async ensureDefaultAdmin(): Promise<void> {
+		const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
+		const allowDefault = isDev || process.env.CREATE_DEFAULT_ADMIN === "true";
+		if (!allowDefault) {
+			console.warn(
+				"[DB] Skipping default admin creation in production. Set CREATE_DEFAULT_ADMIN=true to enable.",
+			);
+			return;
+		}
+
 		const pool = this.getPool();
 		const existing = await pool.query(
 			"SELECT id FROM admins WHERE username = $1",
@@ -179,6 +204,10 @@ export class PostgresDriver implements DbDriver {
 	}
 
 	async createAdmin(username: string, password: string): Promise<boolean> {
+		const strengthCheck = validatePasswordStrength(password);
+		if (!strengthCheck.valid) {
+			throw new Error(strengthCheck.error);
+		}
 		const pool = this.getPool();
 		const { hash, salt } = hashPassword(password);
 		try {
@@ -200,7 +229,27 @@ export class PostgresDriver implements DbDriver {
 		);
 		const row = result.rows[0];
 		if (!row) return false;
-		return verifyPassword(password, row.password_hash, row.password_salt);
+		const { valid, needsUpgrade } = verifyPassword(
+			password,
+			row.password_hash,
+			row.password_salt,
+		);
+		if (valid && needsUpgrade) {
+			const upgradedHash = crypto
+				.pbkdf2Sync(
+					password,
+					row.password_salt,
+					PBKDF2_ITERATIONS,
+					64,
+					"sha512",
+				)
+				.toString("hex");
+			await pool.query(
+				"UPDATE admins SET password_hash = $1 WHERE username = $2",
+				[upgradedHash, username],
+			);
+		}
+		return valid;
 	}
 
 	async listAdmins(): Promise<
@@ -221,6 +270,10 @@ export class PostgresDriver implements DbDriver {
 		username: string,
 		newPassword: string,
 	): Promise<boolean> {
+		const strengthCheck = validatePasswordStrength(newPassword);
+		if (!strengthCheck.valid) {
+			throw new Error(strengthCheck.error);
+		}
 		const pool = this.getPool();
 		const { hash, salt } = hashPassword(newPassword);
 		const result = await pool.query(

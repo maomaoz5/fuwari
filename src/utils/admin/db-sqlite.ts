@@ -3,6 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import type { DbDriver } from "./db-interface";
+import {
+	PBKDF2_ITERATIONS,
+	PBKDF2_ITERATIONS_OLD,
+	validatePasswordStrength,
+} from "./security";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_PATH = path.join(DATA_DIR, "stats.db");
@@ -15,7 +20,7 @@ export function hashPassword(
 ): { hash: string; salt: string } {
 	const useSalt = salt || crypto.randomBytes(16).toString("hex");
 	const hash = crypto
-		.pbkdf2Sync(password, useSalt, 10000, 64, "sha512")
+		.pbkdf2Sync(password, useSalt, PBKDF2_ITERATIONS, 64, "sha512")
 		.toString("hex");
 	return { hash, salt: useSalt };
 }
@@ -24,9 +29,20 @@ export function verifyPassword(
 	password: string,
 	storedHash: string,
 	salt: string,
-): boolean {
-	const { hash } = hashPassword(password, salt);
-	return hash === storedHash;
+): { valid: boolean; needsUpgrade: boolean } {
+	// 先用新参数验证
+	const newHash = crypto
+		.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS, 64, "sha512")
+		.toString("hex");
+	if (newHash === storedHash) return { valid: true, needsUpgrade: false };
+
+	// 再用旧参数验证（透明升级）
+	const oldHash = crypto
+		.pbkdf2Sync(password, salt, PBKDF2_ITERATIONS_OLD, 64, "sha512")
+		.toString("hex");
+	if (oldHash === storedHash) return { valid: true, needsUpgrade: true };
+
+	return { valid: false, needsUpgrade: false };
 }
 
 export class SqliteDriver implements DbDriver {
@@ -76,6 +92,15 @@ export class SqliteDriver implements DbDriver {
 	}
 
 	private ensureDefaultAdmin(): void {
+		const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
+		const allowDefault = isDev || process.env.CREATE_DEFAULT_ADMIN === "true";
+		if (!allowDefault) {
+			console.warn(
+				"[DB] Skipping default admin creation in production. Set CREATE_DEFAULT_ADMIN=true to enable.",
+			);
+			return;
+		}
+
 		const db = this.getDb();
 		const existing = db
 			.prepare("SELECT id FROM admins WHERE username = ?")
@@ -159,6 +184,10 @@ export class SqliteDriver implements DbDriver {
 	}
 
 	async createAdmin(username: string, password: string): Promise<boolean> {
+		const strengthCheck = validatePasswordStrength(password);
+		if (!strengthCheck.valid) {
+			throw new Error(strengthCheck.error);
+		}
 		const db = this.getDb();
 		const { hash, salt } = hashPassword(password);
 		try {
@@ -183,7 +212,27 @@ export class SqliteDriver implements DbDriver {
 			| { password_hash: string; password_salt: string }
 			| undefined;
 		if (!row) return false;
-		return verifyPassword(password, row.password_hash, row.password_salt);
+		const { valid, needsUpgrade } = verifyPassword(
+			password,
+			row.password_hash,
+			row.password_salt,
+		);
+		if (valid && needsUpgrade) {
+			const upgradedHash = crypto
+				.pbkdf2Sync(
+					password,
+					row.password_salt,
+					PBKDF2_ITERATIONS,
+					64,
+					"sha512",
+				)
+				.toString("hex");
+			db.prepare("UPDATE admins SET password_hash = ? WHERE username = ?").run(
+				upgradedHash,
+				username,
+			);
+		}
+		return valid;
 	}
 
 	async listAdmins(): Promise<
@@ -204,6 +253,10 @@ export class SqliteDriver implements DbDriver {
 		username: string,
 		newPassword: string,
 	): Promise<boolean> {
+		const strengthCheck = validatePasswordStrength(newPassword);
+		if (!strengthCheck.valid) {
+			throw new Error(strengthCheck.error);
+		}
 		const db = this.getDb();
 		const { hash, salt } = hashPassword(newPassword);
 		const result = db

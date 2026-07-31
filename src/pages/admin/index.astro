@@ -85,8 +85,6 @@ import "../../styles/main.css";
                 });
 
                 if (res.ok) {
-                    const data = await res.json();
-                    localStorage.setItem('admin_token', data.token);
                     window.location.href = '/admin/dashboard/';
                 } else {
                     const errData = await res.json().catch(() => null);

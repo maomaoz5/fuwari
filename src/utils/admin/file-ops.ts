@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { validateSlug } from "./security";
 
 // 文章目录路径
 const POSTS_DIR = path.join(process.cwd(), "src", "content", "posts");
@@ -69,6 +70,9 @@ export function listPosts(): PostMeta[] {
 
 // 读取单篇文章完整内容
 export function readPost(slug: string): PostDetail | null {
+	if (!validateSlug(slug)) {
+		throw new Error("Invalid slug format");
+	}
 	const filePath = path.join(POSTS_DIR, `${slug}.md`);
 	if (!fs.existsSync(filePath)) return null;
 
@@ -85,6 +89,9 @@ export function createPost(
 	frontmatter: PostFrontmatter,
 	content: string,
 ): void {
+	if (!validateSlug(slug)) {
+		throw new Error("Invalid slug format");
+	}
 	const filePath = path.join(POSTS_DIR, `${slug}.md`);
 	if (fs.existsSync(filePath)) {
 		throw new Error(`Post with slug "${slug}" already exists`);
@@ -98,6 +105,9 @@ export function writePost(
 	frontmatter: PostFrontmatter,
 	content: string,
 ): void {
+	if (!validateSlug(slug)) {
+		throw new Error("Invalid slug format");
+	}
 	const filePath = path.join(POSTS_DIR, `${slug}.md`);
 	const fmData: Record<string, unknown> = { ...frontmatter };
 
@@ -112,6 +122,9 @@ export function writePost(
 
 // 删除文章
 export function deletePost(slug: string): boolean {
+	if (!validateSlug(slug)) {
+		throw new Error("Invalid slug format");
+	}
 	const filePath = path.join(POSTS_DIR, `${slug}.md`);
 	if (!fs.existsSync(filePath)) return false;
 	fs.unlinkSync(filePath);

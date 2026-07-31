@@ -1,11 +1,20 @@
 import { unauthorizedResponse, validateAuth } from "@utils/admin/auth";
-import { changePassword, deleteAdmin } from "@utils/admin/stats-db";
+import { safeHandleError } from "@utils/admin/security";
+import {
+	changePassword,
+	deleteAdmin,
+	verifyAdmin,
+} from "@utils/admin/stats-db";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 export const PUT: APIRoute = async ({ request, params }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	// 验证操作者身份
+	const currentAuth = validateAuth(request);
+	if (!currentAuth.valid || !currentAuth.username) {
+		return unauthorizedResponse();
+	}
 
 	try {
 		const username = params.username;
@@ -16,12 +25,34 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			});
 		}
 
-		const body = await request.json();
-		const { newPassword } = body;
+		const { newPassword, currentPassword } = await request.json();
 
-		if (!newPassword || newPassword.length < 6) {
+		// SEC-15: 要求提供当前密码
+		if (!currentPassword) {
 			return new Response(
-				JSON.stringify({ error: "Password must be at least 6 characters" }),
+				JSON.stringify({ error: "Current password is required" }),
+				{
+					status: 400,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+		}
+
+		// 验证当前密码是否正确
+		const verified = await verifyAdmin(username, currentPassword);
+		if (!verified) {
+			return new Response(
+				JSON.stringify({ error: "Current password is incorrect" }),
+				{
+					status: 403,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+		}
+
+		if (!newPassword) {
+			return new Response(
+				JSON.stringify({ error: "New password is required" }),
 				{
 					status: 400,
 					headers: { "Content-Type": "application/json" },
@@ -42,21 +73,16 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to change password",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "PUT /api/admin/admins/[username]");
 	}
 };
 
 export const DELETE: APIRoute = async ({ request, params }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	// 验证操作者身份
+	const currentAuth = validateAuth(request);
+	if (!currentAuth.valid || !currentAuth.username) {
+		return unauthorizedResponse();
+	}
 
 	try {
 		const username = params.username;
@@ -65,6 +91,31 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 				status: 400,
 				headers: { "Content-Type": "application/json" },
 			});
+		}
+
+		// SEC-16: 要求密码确认才能删除
+		const { confirmPassword } = await request.json();
+
+		if (!confirmPassword) {
+			return new Response(
+				JSON.stringify({ error: "Password confirmation is required" }),
+				{
+					status: 400,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+		}
+
+		// 验证操作者的密码
+		const verified = await verifyAdmin(currentAuth.username, confirmPassword);
+		if (!verified) {
+			return new Response(
+				JSON.stringify({ error: "Password confirmation failed" }),
+				{
+					status: 403,
+					headers: { "Content-Type": "application/json" },
+				},
+			);
 		}
 
 		const success = await deleteAdmin(username);
@@ -85,15 +136,6 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to delete admin",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "DELETE /api/admin/admins/[username]");
 	}
 };

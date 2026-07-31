@@ -1,14 +1,23 @@
 import { unauthorizedResponse, validateAuth } from "@utils/admin/auth";
 import { deletePost, readPost, writePost } from "@utils/admin/file-ops";
+import {
+	safeErrorResponse,
+	safeHandleError,
+	validateSlug,
+} from "@utils/admin/security";
 import type { APIRoute } from "astro";
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ request, params }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	if (!validateAuth(request).valid) return unauthorizedResponse();
+
+	const slug = params.slug as string;
+	if (!validateSlug(slug)) {
+		return safeErrorResponse(400, "Invalid slug format");
+	}
 
 	try {
-		const slug = params.slug as string;
 		const post = readPost(slug);
 
 		if (!post) {
@@ -23,21 +32,19 @@ export const GET: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({ error: "Failed to read post", details: String(error) }),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "GET /api/admin/posts/[slug]");
 	}
 };
 
 export const PUT: APIRoute = async ({ request, params }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	if (!validateAuth(request).valid) return unauthorizedResponse();
+
+	const slug = params.slug as string;
+	if (!validateSlug(slug)) {
+		return safeErrorResponse(400, "Invalid slug format");
+	}
 
 	try {
-		const slug = params.slug as string;
 		const body = await request.json();
 		const { content, frontmatter } = body;
 
@@ -60,24 +67,19 @@ export const PUT: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to update post",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "PUT /api/admin/posts/[slug]");
 	}
 };
 
 export const DELETE: APIRoute = async ({ request, params }) => {
-	if (!validateAuth(request)) return unauthorizedResponse();
+	if (!validateAuth(request).valid) return unauthorizedResponse();
+
+	const slug = params.slug as string;
+	if (!validateSlug(slug)) {
+		return safeErrorResponse(400, "Invalid slug format");
+	}
 
 	try {
-		const slug = params.slug as string;
 		const deleted = deletePost(slug);
 
 		if (!deleted) {
@@ -92,15 +94,6 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify({
-				error: "Failed to delete post",
-				details: String(error),
-			}),
-			{
-				status: 500,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return safeHandleError(error, "DELETE /api/admin/posts/[slug]");
 	}
 };

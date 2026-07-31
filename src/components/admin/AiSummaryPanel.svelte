@@ -1,8 +1,6 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
-
 let summaries = [];
 let loading = true;
 let error = "";
@@ -13,9 +11,7 @@ async function loadSummaries() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/ai-summary/", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch("/api/admin/ai-summary/");
 		if (res.status === 401) {
 			error = "认证已过期";
 			return;
@@ -23,7 +19,7 @@ async function loadSummaries() {
 		if (!res.ok) throw new Error("Failed to load summaries");
 		summaries = await res.json();
 	} catch (e) {
-		error = "加载 AI 总结失败: " + e.message;
+		error = `加载 AI 总结失败: ${e.message}`;
 	} finally {
 		loading = false;
 	}
@@ -35,14 +31,13 @@ async function deleteSummary(slug) {
 	try {
 		const res = await fetch(`/api/admin/ai-summary/${slug}/`, {
 			method: "DELETE",
-			headers: { Authorization: `Bearer ${token}` },
 		});
 		if (!res.ok) throw new Error("Failed to delete");
 		summaries = summaries.filter((s) => s.slug !== slug);
 		success = `已删除 ${slug} 的缓存`;
 		setTimeout(() => (success = ""), 3000);
 	} catch (e) {
-		error = "删除失败: " + e.message;
+		error = `删除失败: ${e.message}`;
 	} finally {
 		deletingSlug = "";
 	}
@@ -54,7 +49,6 @@ async function regenerate(slug) {
 		const res = await fetch(`/api/admin/ai-summary/${slug}/`, {
 			method: "POST",
 			headers: {
-				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/json",
 			},
 		});
@@ -64,14 +58,14 @@ async function regenerate(slug) {
 			error = "操作失败";
 		}
 	} catch (e) {
-		error = "请求失败: " + e.message;
+		error = `请求失败: ${e.message}`;
 	}
 }
 
 function formatSize(bytes) {
-	if (bytes < 1024) return bytes + " B";
-	if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-	return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+	if (bytes < 1024) return `${bytes} B`;
+	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatDate(iso) {

@@ -1,8 +1,6 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
-
 let config = {};
 let loading = true;
 let saving = false;
@@ -27,9 +25,7 @@ async function loadConfig() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/config/", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch("/api/admin/config/");
 		if (res.status === 401) {
 			error = "认证已过期";
 			return;
@@ -38,7 +34,7 @@ async function loadConfig() {
 		config = await res.json();
 		applyConfig();
 	} catch (e) {
-		error = "加载配置失败: " + e.message;
+		error = `加载配置失败: ${e.message}`;
 	} finally {
 		loading = false;
 	}
@@ -98,7 +94,6 @@ async function saveConfig() {
 		const res = await fetch("/api/admin/config/", {
 			method: "PUT",
 			headers: {
-				Authorization: `Bearer ${token}`,
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(overrides),
@@ -107,7 +102,7 @@ async function saveConfig() {
 		success = "配置保存成功！";
 		setTimeout(() => (success = ""), 3000);
 	} catch (e) {
-		error = "保存失败: " + e.message;
+		error = `保存失败: ${e.message}`;
 	} finally {
 		saving = false;
 	}

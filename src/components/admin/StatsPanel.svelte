@@ -1,8 +1,6 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
-
 let stats = null;
 let loading = true;
 let error = "";
@@ -12,9 +10,7 @@ async function loadStats() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/stats/?range=${range}`, {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch(`/api/admin/stats/?range=${range}`);
 		if (res.status === 401) {
 			error = "认证已过期";
 			return;
@@ -22,7 +18,7 @@ async function loadStats() {
 		if (!res.ok) throw new Error("Failed to load stats");
 		stats = await res.json();
 	} catch (e) {
-		error = "加载统计数据失败: " + e.message;
+		error = `加载统计数据失败: ${e.message}`;
 	} finally {
 		loading = false;
 	}
@@ -33,10 +29,9 @@ function setRange(r) {
 	loadStats();
 }
 
-$: maxDailyCount =
-	stats && stats.dailyViews
-		? Math.max(...stats.dailyViews.map((d) => d.count), 1)
-		: 1;
+$: maxDailyCount = stats?.dailyViews
+	? Math.max(...stats.dailyViews.map((d) => d.count), 1)
+	: 1;
 
 onMount(() => {
 	loadStats();

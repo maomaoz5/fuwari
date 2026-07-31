@@ -1,8 +1,6 @@
 <script>
 import { onMount } from "svelte";
 
-export let token;
-
 let admins = [];
 let loading = true;
 let error = "";
@@ -17,15 +15,28 @@ let createError = "";
 // 修改密码表单
 let editingUsername = "";
 let newPasswordInput = "";
+let currentPasswordInput = "";
 let changePwError = "";
 
 // 当前登录用户名（从 session 获取）
 let currentUsername = "";
 
-onMount(() => {
-	// 从 session 中获取当前用户名
-	const sessionData = localStorage.getItem("admin_username") || "";
-	currentUsername = sessionData;
+// 删除确认对话框
+let deleteConfirmUsername = "";
+let deleteConfirmPassword = "";
+let showDeleteConfirm = false;
+let deleting = false;
+
+onMount(async () => {
+	try {
+		const res = await fetch("/api/admin/me");
+		if (res.ok) {
+			const data = await res.json();
+			currentUsername = data.username;
+		}
+	} catch {
+		// ignore
+	}
 	loadAdmins();
 });
 
@@ -33,9 +44,7 @@ async function loadAdmins() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/admins/", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
+		const res = await fetch("/api/admin/admins/");
 		if (res.status === 401) {
 			error = "未授权，请重新登录";
 			return;
@@ -59,8 +68,8 @@ async function handleCreate() {
 		createError = "请填写用户名和密码";
 		return;
 	}
-	if (newPassword.length < 6) {
-		createError = "密码至少 6 个字符";
+	if (newPassword.length < 12) {
+		createError = "密码至少 12 个字符";
 		return;
 	}
 	try {
@@ -68,7 +77,6 @@ async function handleCreate() {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
 			},
 			body: JSON.stringify({ username: newUsername, password: newPassword }),
 		});
@@ -90,8 +98,12 @@ async function handleCreate() {
 
 async function handleChangePassword() {
 	changePwError = "";
-	if (!newPasswordInput || newPasswordInput.length < 6) {
-		changePwError = "密码至少 6 个字符";
+	if (!currentPasswordInput) {
+		changePwError = "请输入当前密码";
+		return;
+	}
+	if (!newPasswordInput || newPasswordInput.length < 12) {
+		changePwError = "密码至少 12 个字符";
 		return;
 	}
 	try {
@@ -99,15 +111,18 @@ async function handleChangePassword() {
 			method: "PUT",
 			headers: {
 				"Content-Type": "application/json",
-				Authorization: `Bearer ${token}`,
 			},
-			body: JSON.stringify({ newPassword: newPasswordInput }),
+			body: JSON.stringify({
+				newPassword: newPasswordInput,
+				currentPassword: currentPasswordInput,
+			}),
 		});
 		const data = await res.json().catch(() => null);
 		if (res.ok) {
 			successMsg = `"${editingUsername}" 密码已修改`;
 			editingUsername = "";
 			newPasswordInput = "";
+			currentPasswordInput = "";
 			setTimeout(() => (successMsg = ""), 3000);
 		} else {
 			changePwError = data?.error || "修改失败";
@@ -117,21 +132,32 @@ async function handleChangePassword() {
 	}
 }
 
-async function handleDelete(username) {
+function handleDelete(username) {
 	if (username === currentUsername) {
 		error = "不能删除当前登录的管理员";
 		setTimeout(() => (error = ""), 3000);
 		return;
 	}
-	if (!confirm(`确定要删除管理员 "${username}" 吗？`)) return;
+	deleteConfirmUsername = username;
+	deleteConfirmPassword = "";
+	showDeleteConfirm = true;
+}
+
+async function confirmDelete() {
+	if (!deleteConfirmPassword) {
+		error = "请输入密码确认";
+		return;
+	}
+	deleting = true;
 	try {
-		const res = await fetch(`/api/admin/admins/${username}/`, {
+		const res = await fetch(`/api/admin/admins/${deleteConfirmUsername}/`, {
 			method: "DELETE",
-			headers: { Authorization: `Bearer ${token}` },
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ confirmPassword: deleteConfirmPassword }),
 		});
 		const data = await res.json().catch(() => null);
 		if (res.ok) {
-			successMsg = `管理员 "${username}" 已删除`;
+			successMsg = `管理员 "${deleteConfirmUsername}" 已删除`;
 			loadAdmins();
 			setTimeout(() => (successMsg = ""), 3000);
 		} else {
@@ -141,6 +167,11 @@ async function handleDelete(username) {
 	} catch {
 		error = "网络错误";
 		setTimeout(() => (error = ""), 3000);
+	} finally {
+		deleting = false;
+		showDeleteConfirm = false;
+		deleteConfirmUsername = "";
+		deleteConfirmPassword = "";
 	}
 }
 </script>
@@ -189,7 +220,7 @@ async function handleDelete(username) {
             bind:value={newPassword}
             on:keydown={(e) => e.key === 'Enter' && handleCreate()}
             class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-            placeholder="至少 6 个字符"
+            placeholder="至少 12 个字符"
           />
         </div>
         {#if createError}
@@ -235,6 +266,7 @@ async function handleDelete(username) {
                   on:click={() => {
                     editingUsername = admin.username;
                     newPasswordInput = "";
+                    currentPasswordInput = "";
                     changePwError = "";
                   }}
                   class="text-blue-600 dark:text-blue-400 hover:underline text-xs"
@@ -254,36 +286,83 @@ async function handleDelete(username) {
             {#if editingUsername === admin.username}
               <tr class="bg-gray-50 dark:bg-gray-800/50">
                 <td colspan="3" class="px-4 py-3">
-                  <div class="flex items-center gap-2">
-                    <input
-                      type="password"
-                      bind:value={newPasswordInput}
-                      on:keydown={(e) => e.key === 'Enter' && handleChangePassword()}
-                      class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-                      placeholder="新密码（至少 6 字符）"
-                    />
-                    <button
-                      on:click={handleChangePassword}
-                      class="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition text-xs"
-                    >
-                      确认
-                    </button>
-                    <button
-                      on:click={() => (editingUsername = "")}
-                      class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-xs"
-                    >
-                      取消
-                    </button>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="password"
+                        bind:value={currentPasswordInput}
+                        on:keydown={(e) => e.key === 'Enter' && handleChangePassword()}
+                        class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        placeholder="当前密码"
+                      />
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="password"
+                        bind:value={newPasswordInput}
+                        on:keydown={(e) => e.key === 'Enter' && handleChangePassword()}
+                        class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        placeholder="新密码（至少 12 字符）"
+                      />
+                      <button
+                        on:click={handleChangePassword}
+                        class="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition text-xs"
+                      >
+                        确认
+                      </button>
+                      <button
+                        on:click={() => (editingUsername = "")}
+                        class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-xs"
+                      >
+                        取消
+                      </button>
+                    </div>
+                    {#if changePwError}
+                      <p class="text-red-500 text-xs mt-1">{changePwError}</p>
+                    {/if}
                   </div>
-                  {#if changePwError}
-                    <p class="text-red-500 text-xs mt-1">{changePwError}</p>
-                  {/if}
                 </td>
               </tr>
             {/if}
           {/each}
         </tbody>
       </table>
+    </div>
+  {/if}
+
+  <!-- 删除确认对话框 -->
+  {#if showDeleteConfirm}
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">确认删除</h3>
+        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+          确定要删除管理员「{deleteConfirmUsername}」吗？请输入您的密码确认。
+        </p>
+        <div class="mb-4">
+          <input
+            type="password"
+            bind:value={deleteConfirmPassword}
+            on:keydown={(e) => e.key === 'Enter' && confirmDelete()}
+            class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            placeholder="输入密码确认"
+          />
+        </div>
+        <div class="flex justify-end gap-3">
+          <button
+            on:click={() => { showDeleteConfirm = false; deleteConfirmUsername = ""; deleteConfirmPassword = ""; }}
+            class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+          >
+            取消
+          </button>
+          <button
+            on:click={confirmDelete}
+            disabled={deleting}
+            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50"
+          >
+            {deleting ? '删除中...' : '确认删除'}
+          </button>
+        </div>
+      </div>
     </div>
   {/if}
 </div>

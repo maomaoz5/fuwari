@@ -8,6 +8,7 @@ import PostList from "./PostList.svelte";
 import StatsPanel from "./StatsPanel.svelte";
 
 let token = "";
+let currentUsername = "";
 let currentView = "posts";
 let editorSlug = "";
 let showLogin = false;
@@ -54,9 +55,18 @@ function handleAdminNavigate(e) {
 	navigateTo(e.detail.hash);
 }
 
-onMount(() => {
-	token = localStorage.getItem("admin_token") || "";
-	if (!token) {
+onMount(async () => {
+	try {
+		const res = await fetch("/api/admin/me");
+		if (res.ok) {
+			const data = await res.json();
+			currentUsername = data.username;
+			token = currentUsername;
+			showLogin = false;
+		} else {
+			showLogin = true;
+		}
+	} catch {
 		showLogin = true;
 	}
 	parseHash();
@@ -82,9 +92,7 @@ async function handleLogin() {
 		});
 		if (res.ok) {
 			const data = await res.json();
-			token = data.token;
-			localStorage.setItem("admin_token", token);
-			localStorage.setItem("admin_username", data.username || loginUsername);
+			token = data.username || loginUsername;
 			showLogin = false;
 		} else {
 			const errData = await res.json().catch(() => null);
@@ -101,9 +109,13 @@ function handleNavClick(hash) {
 	window.location.hash = hash;
 }
 
-function handleLogout() {
+async function handleLogout() {
+	try {
+		await fetch("/api/admin/logout", { method: "POST" });
+	} catch {
+		// ignore
+	}
 	token = "";
-	localStorage.removeItem("admin_token");
 	showLogin = true;
 	loginUsername = "";
 	loginPassword = "";
@@ -227,19 +239,19 @@ function isActive(hash) {
       <div class="p-4 md:p-6">
         {#if token}
           {#if currentView === 'posts' || currentView === ''}
-            <PostList {token} />
+            <PostList />
           {:else if currentView === 'editor'}
-            <PostEditor {token} slug={editorSlug} />
+            <PostEditor slug={editorSlug} />
           {:else if currentView === 'config'}
-            <ConfigPanel {token} />
+            <ConfigPanel />
           {:else if currentView === 'ai-summary'}
-            <AiSummaryPanel {token} />
+            <AiSummaryPanel />
           {:else if currentView === 'stats'}
-            <StatsPanel {token} />
+            <StatsPanel />
           {:else if currentView === 'admin-manage'}
-            <AdminManagePanel {token} />
+            <AdminManagePanel />
           {:else}
-            <PostList {token} />
+            <PostList />
           {/if}
         {/if}
       </div>
