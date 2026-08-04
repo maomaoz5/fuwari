@@ -152,6 +152,7 @@ async function handleUpdateEmail() {
 		const res = await fetch("/api/admin/update-email", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
+			credentials: "include",
 			body: JSON.stringify({ email: emailInput.trim() }),
 		});
 		const data = await res.json().catch(() => null);
