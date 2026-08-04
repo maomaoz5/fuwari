@@ -88,6 +88,6 @@ export const aiSummaryConfig: AiSummaryConfig = {
 
 export const captchaConfig: CaptchaConfig = {
 	provider: "turnstile",
-	turnstileSiteKey: "",
+	turnstileSiteKey: "0x4AAAAAAEGI24vn79XN8ZH3",
 	hcaptchaSiteKey: "",
 };
