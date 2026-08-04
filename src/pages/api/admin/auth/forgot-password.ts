@@ -1,3 +1,10 @@
+import {
+	buildCaptchaInfo,
+	CaptchaVerificationError,
+	getCaptchaProvider,
+	getCaptchaSecretKey,
+	verifyCaptcha,
+} from "@utils/admin/captcha";
 import { sendResetEmail } from "@utils/admin/email";
 import { createRateLimiter, RATE_LIMIT_WINDOW_MS } from "@utils/admin/security";
 import { getAdminEmail, storeResetToken } from "@utils/admin/stats-db";
@@ -27,28 +34,38 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		}
 
-		const { username, turnstileToken } = await request.json();
+		const { username, captchaToken } = await request.json();
 
-		// Turnstile 验证码验证
-		const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
-		if (turnstileSecretKey) {
-			const verifyRes = await fetch(
-				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						secret: turnstileSecretKey,
-						response: turnstileToken,
-					}),
-				},
-			);
-			const verifyData = await verifyRes.json();
-			if (!verifyData.success) {
-				return new Response(JSON.stringify({ error: "验证码验证失败" }), {
-					status: 400,
-					headers: { "Content-Type": "application/json" },
-				});
+		// 验证码验证（支持 turnstile / hcaptcha，由后端配置决定）
+		const captchaProvider = await getCaptchaProvider();
+		if (captchaProvider !== "none") {
+			try {
+				const captchaInfo = await buildCaptchaInfo();
+				const context = { captchaInfo };
+				await verifyCaptcha(captchaToken || "", context);
+			} catch (err) {
+				if (err instanceof CaptchaVerificationError) {
+					const secretKey = await getCaptchaSecretKey();
+					console.warn(
+						"[forgot-password] 验证码验证失败",
+						`provider=${captchaProvider}`,
+						`hasSecretKey=${!!secretKey}`,
+						`hasToken=${!!captchaToken}`,
+						`errorType=${err.type}`,
+					);
+					return new Response(
+						JSON.stringify({
+							error: err.message,
+							captchaInfo: err.context.captchaInfo,
+							captchaError: err.context.captchaError,
+						}),
+						{
+							status: 400,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+				throw err;
 			}
 		}
 

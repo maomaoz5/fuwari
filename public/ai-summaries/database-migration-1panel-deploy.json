@@ -1,6 +1,6 @@
 {
   "title": "",
-  "summary": "这篇文章记录了如何通过抽象数据库驱动接口（DbDriver）同时支持 SQLite 和 PostgreSQL，实现从本地开发到生产环境的无缝切换。文章详细介绍了两套驱动的实现方式、环境变量 DB_TYPE 的使用以及 PostgreSQL 连接字符串中特殊字符的 URL 编码注意事项。接着，作者 walkthrough 了在 1Panel 上安装 PostgreSQL、创建数据库、克隆项目、配置环境变量、PM2 启动服务、Nginx 反向代理以及域名设置等完整部署流程。总结了双数据库架构的优势，希望为使用 Astro+Svelte 搭建博客后台管理的开发者提供一个可参考的方案。",
-  "generatedAt": "2026-07-31T04:07:12.394Z",
-  "contentHash": "4dacb98331c2c1ce84c4d0bb2892c2ba27c0dff7f9d03a683e3180d83de490de"
+  "summary": "该博客实现了 SQLite 与 PostgreSQL 的双数据库支持，通过统一的 `DbDriver` 接口和 `DB_TYPE` 环境变量在本地开发时默认使用零配置的 SQLite（`data/stats.db`），而在生产环境切换为通过 1Panel 安装的 PostgreSQL，只需配置 `DATABASE_URL`（注意密码中的特殊字符需 URL‑encode）即可无缝切换，业务代码无须改动。部署流程包括在 1Panel 中安装 PostgreSQL、创建数据库与用户、安装项目并通过 PM2 运行、配置 Nginx 反向代理，并可在 `.env` 中通过 `CREATE_DEFAULT_ADMIN`、`OPENROUTER_API_KEY` 等选项调节默认管理员创建、邮箱重置等功能。总体实现了开发便利、生产可靠、部署简化的完整方案。",
+  "generatedAt": "2026-08-04T07:52:27.812Z",
+  "contentHash": "22fc63dcb45f8ee28175b27e17cff3abc22b4321a5c1401b411d0291e81f1c1c"
 }

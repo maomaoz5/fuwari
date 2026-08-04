@@ -11,6 +11,7 @@ const ALLOWED_CONFIG_KEYS = new Set([
 	"license",
 	"expressiveCode",
 	"aiSummary",
+	"captcha",
 ]);
 
 export const prerender = false;

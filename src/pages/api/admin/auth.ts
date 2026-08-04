@@ -5,6 +5,13 @@ import {
 	validateCredentials,
 } from "@utils/admin/auth";
 import {
+	buildCaptchaInfo,
+	CaptchaVerificationError,
+	getCaptchaProvider,
+	getCaptchaSecretKey,
+	verifyCaptcha,
+} from "@utils/admin/captcha";
+import {
 	createRateLimiter,
 	RATE_LIMIT_MAX_ATTEMPTS,
 	RATE_LIMIT_WINDOW_MS,
@@ -37,7 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		}
 
-		const { username, password, turnstileToken } = await request.json();
+		const { username, password, captchaToken } = await request.json();
 		if (!username || !password) {
 			return new Response(JSON.stringify({ error: "请输入用户名和密码" }), {
 				status: 400,
@@ -45,26 +52,36 @@ export const POST: APIRoute = async ({ request }) => {
 			});
 		}
 
-		// Turnstile 验证码验证
-		const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
-		if (turnstileSecretKey) {
-			const verifyRes = await fetch(
-				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						secret: turnstileSecretKey,
-						response: turnstileToken,
-					}),
-				},
-			);
-			const verifyData = await verifyRes.json();
-			if (!verifyData.success) {
-				return new Response(JSON.stringify({ error: "验证码验证失败" }), {
-					status: 400,
-					headers: { "Content-Type": "application/json" },
-				});
+		// 验证码验证（支持 turnstile / hcaptcha，由后端配置决定）
+		const captchaProvider = await getCaptchaProvider();
+		if (captchaProvider !== "none") {
+			try {
+				const captchaInfo = await buildCaptchaInfo();
+				const context = { captchaInfo };
+				await verifyCaptcha(captchaToken || "", context);
+			} catch (err) {
+				if (err instanceof CaptchaVerificationError) {
+					const secretKey = await getCaptchaSecretKey();
+					console.warn(
+						"[auth] 验证码验证失败",
+						`provider=${captchaProvider}`,
+						`hasSecretKey=${!!secretKey}`,
+						`hasToken=${!!captchaToken}`,
+						`errorType=${err.type}`,
+					);
+					return new Response(
+						JSON.stringify({
+							error: err.message,
+							captchaInfo: err.context.captchaInfo,
+							captchaError: err.context.captchaError,
+						}),
+						{
+							status: 400,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+				throw err;
 			}
 		}
 

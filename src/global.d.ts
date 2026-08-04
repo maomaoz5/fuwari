@@ -11,12 +11,21 @@ declare global {
 				}>;
 			}>;
 		};
-		turnstile: {
+		turnstile?: {
 			render: (
 				container: string | Element,
 				options?: Record<string, unknown>,
 			) => string;
 			remove: (widgetId: string) => void;
+			getResponse: (widgetId?: string) => string | undefined;
+		};
+		hcaptcha?: {
+			render: (
+				container: string | Element,
+				options?: Record<string, unknown>,
+			) => string;
+			remove: (widgetId: string) => void;
+			getResponse: (widgetId?: string) => string | undefined;
 		};
 	}
 }

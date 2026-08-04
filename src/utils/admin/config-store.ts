@@ -70,6 +70,7 @@ export async function getMergedConfig(): Promise<Record<string, unknown>> {
 			license: configModule.licenseConfig,
 			expressiveCode: configModule.expressiveCodeConfig,
 			aiSummary: configModule.aiSummaryConfig,
+			captcha: configModule.captchaConfig,
 		};
 	} catch {
 		// 如果导入失败，返回空默认值 + 覆盖层

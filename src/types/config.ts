@@ -108,6 +108,14 @@ export type ExpressiveCodeConfig = {
 
 export type AiSummaryConfig = {
 	enable: boolean;
+	provider?: "openrouter" | "openai" | "custom";
 	model: string;
 	maxTokens: number;
+	baseUrl?: string;
+};
+
+export type CaptchaConfig = {
+	provider: "turnstile" | "hcaptcha" | "none";
+	turnstileSiteKey: string;
+	hcaptchaSiteKey: string;
 };

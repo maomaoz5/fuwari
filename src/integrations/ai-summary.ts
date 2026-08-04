@@ -3,6 +3,7 @@ import { basename, join } from "node:path";
 import type { AstroIntegration } from "astro";
 import { loadEnv } from "vite";
 import { aiSummaryConfig } from "../config.ts";
+import { getApiKey, getApiKeyEnvName } from "../utils/ai-providers.ts";
 import { generateAllSummaries } from "../utils/ai-summary.ts";
 import { ensureCacheDir } from "../utils/ai-summary-cache.ts";
 
@@ -52,16 +53,17 @@ export default function aiSummaryIntegration(): AstroIntegration {
 						return;
 					}
 
-					// 2. Check API Key
+					// 2. Check API Key based on provider
 					const env = loadEnv(
 						process.env.NODE_ENV ?? "production",
 						process.cwd(),
 						"",
 					);
-					const apiKey = env.OPENROUTER_API_KEY;
+					const apiKey = getApiKey(aiSummaryConfig, env);
 					if (!apiKey) {
+						const envName = getApiKeyEnvName(aiSummaryConfig);
 						console.warn(
-							"[ai-summary] OPENROUTER_API_KEY is not set, skipping AI summary generation.",
+							`[ai-summary] ${envName} is not set, skipping AI summary generation.`,
 						);
 						return;
 					}
