@@ -76,11 +76,18 @@ function renderTurnstileWidget() {
 		turnstileWidgetId = null;
 	}
 	const container = document.getElementById("turnstile-container");
-	if (container && window.turnstile) {
-		turnstileWidgetId = window.turnstile.render(container, {
-			sitekey: "0x4AAAAAAEGI24vn79XN8ZH3",
-		});
+	if (!container) return;
+
+	function tryRender() {
+		if (window.turnstile) {
+			turnstileWidgetId = window.turnstile.render(container, {
+				sitekey: "0x4AAAAAAEGI24vn79XN8ZH3",
+			});
+		} else {
+			setTimeout(tryRender, 100);
+		}
 	}
+	tryRender();
 }
 
 function loadTurnstileScript() {
