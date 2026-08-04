@@ -10,9 +10,20 @@ export interface DbDriver {
 	}>;
 	createAdmin(username: string, password: string): Promise<boolean>;
 	verifyAdmin(username: string, password: string): Promise<boolean>;
-	listAdmins(): Promise<{ id: number; username: string; createdAt: string }[]>;
+	listAdmins(): Promise<
+		{ id: number; username: string; email: string; createdAt: string }[]
+	>;
 	changePassword(username: string, newPassword: string): Promise<boolean>;
 	deleteAdmin(username: string): Promise<boolean>;
+	getAdminEmail(username: string): Promise<string | null>;
+	setAdminEmail(username: string, email: string): Promise<boolean>;
+	storeResetToken(
+		username: string,
+		token: string,
+		expiresAt: Date,
+	): Promise<boolean>;
+	consumeResetToken(token: string): Promise<string | null>;
+	clearResetToken(username: string): Promise<boolean>;
 	close(): Promise<void>;
 	resetForTesting(): Promise<void>;
 }

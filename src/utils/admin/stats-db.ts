@@ -76,6 +76,43 @@ export async function deleteAdmin(username: string): Promise<boolean> {
 	return d.deleteAdmin(username);
 }
 
+// 获取管理员邮箱
+export async function getAdminEmail(username: string): Promise<string | null> {
+	const d = await getDriver();
+	return d.getAdminEmail(username);
+}
+
+// 设置管理员邮箱
+export async function setAdminEmail(
+	username: string,
+	email: string,
+): Promise<boolean> {
+	const d = await getDriver();
+	return d.setAdminEmail(username, email);
+}
+
+// 存储密码重置令牌
+export async function storeResetToken(
+	username: string,
+	token: string,
+	expiresAt: Date,
+): Promise<boolean> {
+	const d = await getDriver();
+	return d.storeResetToken(username, token, expiresAt);
+}
+
+// 消费密码重置令牌（返回用户名，同时标记已使用）
+export async function consumeResetToken(token: string): Promise<string | null> {
+	const d = await getDriver();
+	return d.consumeResetToken(token);
+}
+
+// 清除密码重置令牌
+export async function clearResetToken(username: string): Promise<boolean> {
+	const d = await getDriver();
+	return d.clearResetToken(username);
+}
+
 // 关闭数据库连接（用于优雅退出）
 export async function closeDb(): Promise<void> {
 	if (driver) {

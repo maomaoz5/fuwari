@@ -3,8 +3,10 @@ import {
 	changePassword,
 	createAdmin,
 	deleteAdmin,
+	getAdminEmail,
 	listAdmins,
 	resetAdminsForTesting,
+	setAdminEmail,
 	verifyAdmin,
 } from "../admin/stats-db";
 
@@ -94,9 +96,24 @@ describe("Admin management", () => {
 		for (const admin of admins) {
 			expect(admin).toHaveProperty("id");
 			expect(admin).toHaveProperty("username");
+			expect(admin).toHaveProperty("email");
 			expect(admin).toHaveProperty("createdAt");
 			expect(admin).not.toHaveProperty("password_hash");
 			expect(admin).not.toHaveProperty("password_salt");
 		}
+	});
+
+	it("should set and get admin email", async () => {
+		const result = await setAdminEmail("admin", "test@example.com");
+		expect(result).toBe(true);
+
+		const email = await getAdminEmail("admin");
+		expect(email).toBe("test@example.com");
+	});
+
+	it("should include email in listAdmins result", async () => {
+		await setAdminEmail("admin", "admin@example.com");
+		const admins = await listAdmins();
+		expect(admins[0].email).toBe("admin@example.com");
 	});
 });

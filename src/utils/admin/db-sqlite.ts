@@ -88,7 +88,24 @@ export class SqliteDriver implements DbDriver {
 
 	async init(): Promise<void> {
 		this.getDb();
+		this.migrateAdminsTable();
 		this.ensureDefaultAdmin();
+	}
+
+	private migrateAdminsTable(): void {
+		const db = this.getDb();
+		const migrations = [
+			"ALTER TABLE admins ADD COLUMN email TEXT DEFAULT ''",
+			"ALTER TABLE admins ADD COLUMN reset_token TEXT DEFAULT ''",
+			"ALTER TABLE admins ADD COLUMN reset_token_expires DATETIME DEFAULT NULL",
+		];
+		for (const sql of migrations) {
+			try {
+				db.exec(sql);
+			} catch {
+				// 忽略 duplicate column 错误
+			}
+		}
 	}
 
 	private ensureDefaultAdmin(): void {
@@ -236,15 +253,23 @@ export class SqliteDriver implements DbDriver {
 	}
 
 	async listAdmins(): Promise<
-		{ id: number; username: string; createdAt: string }[]
+		{ id: number; username: string; email: string; createdAt: string }[]
 	> {
 		const db = this.getDb();
 		const rows = db
-			.prepare("SELECT id, username, created_at FROM admins ORDER BY id ASC")
-			.all() as { id: number; username: string; created_at: string }[];
+			.prepare(
+				"SELECT id, username, email, created_at FROM admins ORDER BY id ASC",
+			)
+			.all() as {
+			id: number;
+			username: string;
+			email: string;
+			created_at: string;
+		}[];
 		return rows.map((r) => ({
 			id: r.id,
 			username: r.username,
+			email: r.email || "",
 			createdAt: r.created_at,
 		}));
 	}
@@ -275,6 +300,62 @@ export class SqliteDriver implements DbDriver {
 		if (count.cnt <= 1) return false;
 		const result = db
 			.prepare("DELETE FROM admins WHERE username = ?")
+			.run(username);
+		return result.changes > 0;
+	}
+
+	async getAdminEmail(username: string): Promise<string | null> {
+		const db = this.getDb();
+		const row = db
+			.prepare("SELECT email FROM admins WHERE username = ?")
+			.get(username) as { email: string } | undefined;
+		return row?.email || null;
+	}
+
+	async setAdminEmail(username: string, email: string): Promise<boolean> {
+		const db = this.getDb();
+		const result = db
+			.prepare("UPDATE admins SET email = ? WHERE username = ?")
+			.run(email, username);
+		return result.changes > 0;
+	}
+
+	async storeResetToken(
+		username: string,
+		token: string,
+		expiresAt: Date,
+	): Promise<boolean> {
+		const db = this.getDb();
+		const result = db
+			.prepare(
+				"UPDATE admins SET reset_token = ?, reset_token_expires = ? WHERE username = ?",
+			)
+			.run(token, expiresAt.toISOString(), username);
+		return result.changes > 0;
+	}
+
+	async consumeResetToken(token: string): Promise<string | null> {
+		const db = this.getDb();
+		const row = db
+			.prepare(
+				"SELECT username, reset_token_expires FROM admins WHERE reset_token = ? AND reset_token_expires > datetime('now')",
+			)
+			.get(token) as
+			| { username: string; reset_token_expires: string }
+			| undefined;
+		if (!row) return null;
+		db.prepare(
+			"UPDATE admins SET reset_token = '', reset_token_expires = NULL WHERE username = ?",
+		).run(row.username);
+		return row.username;
+	}
+
+	async clearResetToken(username: string): Promise<boolean> {
+		const db = this.getDb();
+		const result = db
+			.prepare(
+				"UPDATE admins SET reset_token = '', reset_token_expires = NULL WHERE username = ?",
+			)
 			.run(username);
 		return result.changes > 0;
 	}

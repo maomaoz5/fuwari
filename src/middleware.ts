@@ -4,10 +4,13 @@ import { getSessionToken, validateSession } from "@/utils/admin/auth";
 // 不需要认证的路径（匹配时统一去除尾斜杠）
 const PUBLIC_PATHS = new Set([
 	"/admin", // 登录页
+	"/admin/reset-password", // 密码重置页
 ]);
 
 const PUBLIC_API_PATHS = new Set([
 	"/api/admin/auth", // 登录 API
+	"/api/admin/auth/forgot-password", // 忘记密码 API
+	"/api/admin/auth/reset-password", // 重置密码 API
 ]);
 
 // 去除尾斜杠，规范化路径

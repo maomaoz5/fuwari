@@ -165,6 +165,9 @@ function isActive(hash) {
       >
         登录
       </button>
+      <div class="mt-3 text-center">
+        <a href="/admin/reset-password/" class="text-sm opacity-60 hover:opacity-80 transition-opacity">忘记密码？</a>
+      </div>
     </div>
   </div>
 {:else}

@@ -102,6 +102,17 @@ export class PostgresDriver implements DbDriver {
 			"CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)",
 		);
 
+		// 迁移：添加 email 和 reset_token 相关列
+		await pool.query(
+			"ALTER TABLE admins ADD COLUMN IF NOT EXISTS email TEXT DEFAULT ''",
+		);
+		await pool.query(
+			"ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token TEXT DEFAULT ''",
+		);
+		await pool.query(
+			"ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ DEFAULT NULL",
+		);
+
 		await this.ensureDefaultAdmin();
 	}
 
@@ -253,15 +264,16 @@ export class PostgresDriver implements DbDriver {
 	}
 
 	async listAdmins(): Promise<
-		{ id: number; username: string; createdAt: string }[]
+		{ id: number; username: string; email: string; createdAt: string }[]
 	> {
 		const pool = this.getPool();
 		const result = await pool.query(
-			"SELECT id, username, created_at FROM admins ORDER BY id ASC",
+			"SELECT id, username, email, created_at FROM admins ORDER BY id ASC",
 		);
 		return result.rows.map((r) => ({
 			id: r.id,
 			username: r.username,
+			email: r.email || "",
 			createdAt: r.created_at.toISOString(),
 		}));
 	}
@@ -291,6 +303,61 @@ export class PostgresDriver implements DbDriver {
 		const result = await pool.query("DELETE FROM admins WHERE username = $1", [
 			username,
 		]);
+		return (result.rowCount ?? 0) > 0;
+	}
+
+	async getAdminEmail(username: string): Promise<string | null> {
+		const pool = this.getPool();
+		const result = await pool.query(
+			"SELECT email FROM admins WHERE username = $1",
+			[username],
+		);
+		return result.rows[0]?.email || null;
+	}
+
+	async setAdminEmail(username: string, email: string): Promise<boolean> {
+		const pool = this.getPool();
+		const result = await pool.query(
+			"UPDATE admins SET email = $1 WHERE username = $2",
+			[email, username],
+		);
+		return (result.rowCount ?? 0) > 0;
+	}
+
+	async storeResetToken(
+		username: string,
+		token: string,
+		expiresAt: Date,
+	): Promise<boolean> {
+		const pool = this.getPool();
+		const result = await pool.query(
+			"UPDATE admins SET reset_token = $1, reset_token_expires = $2 WHERE username = $3",
+			[token, expiresAt, username],
+		);
+		return (result.rowCount ?? 0) > 0;
+	}
+
+	async consumeResetToken(token: string): Promise<string | null> {
+		const pool = this.getPool();
+		const result = await pool.query(
+			"SELECT username FROM admins WHERE reset_token = $1 AND reset_token_expires > NOW()",
+			[token],
+		);
+		const row = result.rows[0];
+		if (!row) return null;
+		await pool.query(
+			"UPDATE admins SET reset_token = '', reset_token_expires = NULL WHERE username = $1",
+			[row.username],
+		);
+		return row.username;
+	}
+
+	async clearResetToken(username: string): Promise<boolean> {
+		const pool = this.getPool();
+		const result = await pool.query(
+			"UPDATE admins SET reset_token = '', reset_token_expires = NULL WHERE username = $1",
+			[username],
+		);
 		return (result.rowCount ?? 0) > 0;
 	}
 

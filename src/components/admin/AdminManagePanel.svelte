@@ -18,6 +18,11 @@ let newPasswordInput = "";
 let currentPasswordInput = "";
 let changePwError = "";
 
+// 设置邮箱表单
+let editingEmailUsername = "";
+let emailInput = "";
+let emailError = "";
+
 // 当前登录用户名（从 session 获取）
 let currentUsername = "";
 
@@ -129,6 +134,38 @@ async function handleChangePassword() {
 		}
 	} catch {
 		changePwError = "网络错误";
+	}
+}
+
+async function handleUpdateEmail() {
+	emailError = "";
+	if (!emailInput) {
+		emailError = "请输入邮箱地址";
+		return;
+	}
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	if (!emailRegex.test(emailInput.trim())) {
+		emailError = "邮箱格式不正确";
+		return;
+	}
+	try {
+		const res = await fetch("/api/admin/update-email", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email: emailInput.trim() }),
+		});
+		const data = await res.json().catch(() => null);
+		if (res.ok) {
+			successMsg = `邮箱已更新为 "${emailInput.trim()}"`;
+			editingEmailUsername = "";
+			emailInput = "";
+			loadAdmins();
+			setTimeout(() => (successMsg = ""), 3000);
+		} else {
+			emailError = data?.error || "更新失败";
+		}
+	} catch {
+		emailError = "网络错误";
 	}
 }
 
@@ -247,6 +284,7 @@ async function confirmDelete() {
         <thead class="bg-gray-50 dark:bg-gray-800">
           <tr>
             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">用户名</th>
+            <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">邮箱</th>
             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">创建时间</th>
             <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-400">操作</th>
           </tr>
@@ -260,8 +298,25 @@ async function confirmDelete() {
                   <span class="ml-2 text-xs text-blue-600 dark:text-blue-400">(当前)</span>
                 {/if}
               </td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">
+                {#if admin.email}
+                  <span class="text-gray-700 dark:text-gray-300">{admin.email}</span>
+                {:else}
+                  <span class="text-gray-400 dark:text-gray-500 italic text-xs">未设置</span>
+                {/if}
+              </td>
               <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{admin.createdAt}</td>
               <td class="px-4 py-3 text-right space-x-2">
+                <button
+                  on:click={() => {
+                    editingEmailUsername = admin.username;
+                    emailInput = admin.email || "";
+                    emailError = "";
+                  }}
+                  class="text-green-600 dark:text-green-400 hover:underline text-xs"
+                >
+                  邮箱
+                </button>
                 <button
                   on:click={() => {
                     editingUsername = admin.username;
@@ -283,9 +338,41 @@ async function confirmDelete() {
                 {/if}
               </td>
             </tr>
+            {#if editingEmailUsername === admin.username}
+              <tr class="bg-gray-50 dark:bg-gray-800/50">
+                <td colspan="4" class="px-4 py-3">
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="email"
+                        bind:value={emailInput}
+                        on:keydown={(e) => e.key === 'Enter' && handleUpdateEmail()}
+                        class="flex-1 px-3 py-1.5 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                        placeholder="输入邮箱地址"
+                      />
+                      <button
+                        on:click={handleUpdateEmail}
+                        class="px-3 py-1.5 rounded-lg bg-green-600 text-white hover:bg-green-700 transition text-xs"
+                      >
+                        保存
+                      </button>
+                      <button
+                        on:click={() => { editingEmailUsername = ""; emailInput = ""; emailError = ""; }}
+                        class="px-3 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-xs"
+                      >
+                        取消
+                      </button>
+                    </div>
+                    {#if emailError}
+                      <p class="text-red-500 text-xs mt-1">{emailError}</p>
+                    {/if}
+                  </div>
+                </td>
+              </tr>
+            {/if}
             {#if editingUsername === admin.username}
               <tr class="bg-gray-50 dark:bg-gray-800/50">
-                <td colspan="3" class="px-4 py-3">
+                <td colspan="4" class="px-4 py-3">
                   <div class="space-y-2">
                     <div class="flex items-center gap-2">
                       <input
