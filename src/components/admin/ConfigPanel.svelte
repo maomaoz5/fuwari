@@ -18,8 +18,12 @@ let licenseEnable = false;
 let licenseName = "";
 let licenseUrl = "";
 let aiSummaryEnable = false;
+let aiSummaryProvider = "openrouter";
 let aiSummaryModel = "";
 let aiSummaryMaxTokens = 500;
+let aiSummaryBaseUrl = "";
+let captchaProvider = "turnstile";
+let captchaSiteKey = "";
 
 async function loadConfig() {
 	loading = true;
@@ -56,8 +60,17 @@ function applyConfig() {
 	licenseName = license.name || "";
 	licenseUrl = license.url || "";
 	aiSummaryEnable = aiSummary.enable ?? false;
+	aiSummaryProvider = aiSummary.provider || "openrouter";
 	aiSummaryModel = aiSummary.model || "";
 	aiSummaryMaxTokens = aiSummary.maxTokens ?? 500;
+	aiSummaryBaseUrl = aiSummary.baseUrl || "";
+
+	const captcha = config.captcha || {};
+	captchaProvider = captcha.provider || "turnstile";
+	captchaSiteKey =
+		captchaProvider === "hcaptcha"
+			? captcha.hcaptchaSiteKey || ""
+			: captcha.turnstileSiteKey || "";
 }
 
 async function saveConfig() {
@@ -85,8 +98,19 @@ async function saveConfig() {
 		},
 		aiSummary: {
 			enable: aiSummaryEnable,
+			provider: aiSummaryProvider,
 			model: aiSummaryModel,
 			maxTokens: aiSummaryMaxTokens,
+			...(aiSummaryProvider !== "openrouter"
+				? { baseUrl: aiSummaryBaseUrl }
+				: {}),
+		},
+		captcha: {
+			...(config.captcha || {}),
+			provider: captchaProvider,
+			...(captchaProvider === "hcaptcha"
+				? { hcaptchaSiteKey: captchaSiteKey }
+				: { turnstileSiteKey: captchaSiteKey }),
 		},
 	};
 
@@ -248,6 +272,33 @@ onMount(() => {
             <input type="checkbox" bind:checked={aiSummaryEnable} id="ai-enable" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600" />
             <label for="ai-enable" class="text-sm text-gray-700 dark:text-gray-300">启用 AI 总结</label>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">AI 提供商</label>
+            <select
+              bind:value={aiSummaryProvider}
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="openrouter">OpenRouter（默认）</option>
+              <option value="openai">OpenAI 兼容</option>
+              <option value="custom">自定义</option>
+            </select>
+          </div>
+          {#if aiSummaryProvider !== "openrouter"}
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Base URL{#if aiSummaryProvider === "custom"} <span class="text-red-500">*</span>{/if}
+              </label>
+              <input
+                type="text"
+                bind:value={aiSummaryBaseUrl}
+                placeholder={aiSummaryProvider === "openai" ? "https://api.openai.com/v1" : "https://your-provider.com/v1"}
+                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              />
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {aiSummaryProvider === "openai" ? "留空使用 OpenAI 官方地址" : "必填，如 DeepSeek、智谱等提供商的 API 地址"}
+              </p>
+            </div>
+          {/if}
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">模型</label>
@@ -266,6 +317,38 @@ onMount(() => {
               />
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Captcha Config -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">验证码设置</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">验证码提供商</label>
+            <select
+              bind:value={captchaProvider}
+              class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="turnstile">Cloudflare Turnstile</option>
+              <option value="hcaptcha">hCaptcha</option>
+              <option value="none">禁用</option>
+            </select>
+          </div>
+          {#if captchaProvider !== "none"}
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Site Key</label>
+              <input
+                type="text"
+                bind:value={captchaSiteKey}
+                placeholder={captchaProvider === "turnstile" ? "输入 Turnstile Site Key" : "输入 hCaptcha Site Key"}
+                class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          {/if}
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Secret Key 请在服务器环境变量中配置：Turnstile 使用 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">TURNSTILE_SECRET_KEY</code>，hCaptcha 使用 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">HCAPTCHA_SECRET_KEY</code>
+          </p>
         </div>
       </div>
     </div>

@@ -1,4 +1,10 @@
 <script lang="ts">
+import {
+	getCaptchaToken,
+	loadCaptchaSdk,
+	removeCaptcha,
+	renderCaptcha,
+} from "@utils/captcha-client";
 import { afterUpdate, onDestroy, onMount, tick } from "svelte";
 import AdminManagePanel from "./AdminManagePanel.svelte";
 import AiSummaryPanel from "./AiSummaryPanel.svelte";
@@ -7,6 +13,7 @@ import PostEditor from "./PostEditor.svelte";
 import PostList from "./PostList.svelte";
 import StatsPanel from "./StatsPanel.svelte";
 
+type CaptchaProvider = "turnstile" | "hcaptcha";
 let token = "";
 let currentUsername = "";
 let currentView = "posts";
@@ -16,8 +23,11 @@ let loginUsername = "";
 let loginPassword = "";
 let loginError = "";
 let mobileMenuOpen = false;
-let turnstileWidgetId: string | null = null;
-let turnstileReady = false;
+let captchaWidgetId: string | null = null;
+let captchaSdkLoaded = false;
+let captchaProvider: CaptchaProvider | "none" = "none";
+let captchaSiteKey = "";
+let captchaEnabled = false;
 
 const navItems = [
 	{ hash: "#posts", label: "文章管理", icon: "📄" },
@@ -61,28 +71,55 @@ let prevShowLogin = false;
 afterUpdate(async () => {
 	if (showLogin && !prevShowLogin) {
 		await tick();
-		if (turnstileReady) {
-			renderTurnstileWidget();
+		if (captchaSdkLoaded) {
+			renderCaptchaWidget();
 		} else {
-			loadTurnstileScript();
+			loadCaptchaScript();
 		}
 	}
 	prevShowLogin = showLogin;
 });
 
-function renderTurnstileWidget() {
-	if (turnstileWidgetId !== null && window.turnstile) {
-		window.turnstile.remove(turnstileWidgetId);
-		turnstileWidgetId = null;
+async function fetchCaptchaConfig() {
+	try {
+		const res = await fetch("/api/admin/captcha-config/");
+		if (res.ok) {
+			const data = await res.json();
+			captchaEnabled = data.enabled === true;
+			captchaProvider = data.provider || "none";
+			captchaSiteKey = data.siteKey || "";
+		}
+	} catch {
+		/* ignore */
 	}
-	const container = document.getElementById("turnstile-container");
-	if (!container) return;
+}
+
+function renderCaptchaWidget() {
+	if (
+		captchaWidgetId &&
+		(captchaProvider === "turnstile" ? window.turnstile : window.hcaptcha)
+	) {
+		removeCaptcha(captchaProvider, captchaWidgetId);
+		captchaWidgetId = null;
+	}
+	const container = document.getElementById("captcha-container");
+	if (
+		!container ||
+		!captchaEnabled ||
+		captchaProvider === "none" ||
+		!captchaSiteKey
+	)
+		return;
 
 	function tryRender() {
-		if (window.turnstile) {
-			turnstileWidgetId = window.turnstile.render(container, {
-				sitekey: "0x4AAAAAAEGI24vn79XN8ZH3",
-			});
+		const sdk =
+			captchaProvider === "turnstile" ? window.turnstile : window.hcaptcha;
+		if (sdk) {
+			captchaWidgetId = renderCaptcha(
+				container,
+				captchaProvider,
+				captchaSiteKey,
+			);
 		} else {
 			setTimeout(tryRender, 100);
 		}
@@ -90,22 +127,15 @@ function renderTurnstileWidget() {
 	tryRender();
 }
 
-function loadTurnstileScript() {
-	if (document.getElementById("turnstile-script")) {
-		turnstileReady = true;
-		return;
+async function loadCaptchaScript() {
+	if (!captchaEnabled || captchaProvider === "none" || !captchaSiteKey) return;
+	try {
+		await loadCaptchaSdk(captchaProvider);
+		captchaSdkLoaded = true;
+		renderCaptchaWidget();
+	} catch {
+		console.error("Failed to load captcha SDK");
 	}
-	const script = document.createElement("script");
-	script.id = "turnstile-script";
-	script.src =
-		"https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-	script.async = true;
-	script.defer = true;
-	script.onload = () => {
-		turnstileReady = true;
-		renderTurnstileWidget();
-	};
-	document.head.appendChild(script);
 }
 
 onMount(async () => {
@@ -118,11 +148,12 @@ onMount(async () => {
 			showLogin = false;
 		} else {
 			showLogin = true;
-			loadTurnstileScript();
+			await fetchCaptchaConfig();
+			loadCaptchaScript();
 		}
 	} catch {
 		showLogin = true;
-		loadTurnstileScript();
+		fetchCaptchaConfig().then(() => loadCaptchaScript());
 	}
 	parseHash();
 	window.addEventListener("hashchange", handleHashChange);
@@ -137,10 +168,11 @@ onDestroy(() => {
 async function handleLogin() {
 	loginError = "";
 
-	const turnstileToken = (
-		document.querySelector("[name=cf-turnstile-response]") as HTMLInputElement
-	)?.value;
-	if (!turnstileToken) {
+	const captchaToken =
+		captchaEnabled && captchaProvider !== "none"
+			? getCaptchaToken(document, captchaProvider)
+			: null;
+	if (captchaEnabled && captchaProvider !== "none" && !captchaToken) {
 		loginError = "请先完成验证码验证";
 		return;
 	}
@@ -152,7 +184,7 @@ async function handleLogin() {
 			body: JSON.stringify({
 				username: loginUsername,
 				password: loginPassword,
-				turnstileToken,
+				captchaToken: captchaToken || "",
 			}),
 		});
 		if (res.ok) {
@@ -162,12 +194,17 @@ async function handleLogin() {
 		} else {
 			const errData = await res.json().catch(() => null);
 			loginError = errData?.error || "用户名或密码错误";
-			// 重置 Turnstile 验证码
-			renderTurnstileWidget();
+			// 从响应更新本地状态并重置验证码
+			if (errData?.captchaInfo?.enabled) {
+				captchaEnabled = true;
+				captchaProvider = errData.captchaInfo.provider || captchaProvider;
+				captchaSiteKey = errData.captchaInfo.siteKey || captchaSiteKey;
+			}
+			renderCaptchaWidget();
 		}
 	} catch {
 		loginError = "网络错误";
-		renderTurnstileWidget();
+		renderCaptchaWidget();
 	}
 }
 
@@ -227,7 +264,7 @@ function isActive(hash) {
       {#if loginError}
         <p class="text-red-500 text-sm mb-4">{loginError}</p>
       {/if}
-      <div id="turnstile-container" class="mb-4"></div>
+      <div id="captcha-container" class="mb-4"></div>
       <button
         on:click={handleLogin}
         class="w-full px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"

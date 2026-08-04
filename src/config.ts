@@ -1,5 +1,6 @@
 import type {
 	AiSummaryConfig,
+	CaptchaConfig,
 	ExpressiveCodeConfig,
 	LicenseConfig,
 	NavBarConfig,
@@ -80,6 +81,13 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
 
 export const aiSummaryConfig: AiSummaryConfig = {
 	enable: true,
+	provider: "openrouter",
 	model: "openrouter/free",
 	maxTokens: 500,
+};
+
+export const captchaConfig: CaptchaConfig = {
+	provider: "turnstile",
+	turnstileSiteKey: "",
+	hcaptchaSiteKey: "",
 };
