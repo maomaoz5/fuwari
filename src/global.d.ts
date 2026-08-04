@@ -11,6 +11,12 @@ declare global {
 				}>;
 			}>;
 		};
+		turnstile: {
+			render: (
+				container: string | Element,
+				options?: Record<string, unknown>,
+			) => string;
+		};
 	}
 }
 
