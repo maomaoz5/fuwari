@@ -27,7 +27,31 @@ export const POST: APIRoute = async ({ request }) => {
 			);
 		}
 
-		const { username } = await request.json();
+		const { username, turnstileToken } = await request.json();
+
+		// Turnstile 验证码验证
+		const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
+		if (turnstileSecretKey) {
+			const verifyRes = await fetch(
+				"https://challenges.cloudflare.com/turnstile/v0/siteverify",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						secret: turnstileSecretKey,
+						response: turnstileToken,
+					}),
+				},
+			);
+			const verifyData = await verifyRes.json();
+			if (!verifyData.success) {
+				return new Response(JSON.stringify({ error: "验证码验证失败" }), {
+					status: 400,
+					headers: { "Content-Type": "application/json" },
+				});
+			}
+		}
+
 		if (!username) {
 			return new Response(JSON.stringify({ error: "请输入用户名" }), {
 				status: 400,
