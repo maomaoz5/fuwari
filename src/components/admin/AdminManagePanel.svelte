@@ -149,7 +149,7 @@ async function handleUpdateEmail() {
 		return;
 	}
 	try {
-		const res = await fetch("/api/admin/update-email", {
+		const res = await fetch("/api/admin/update-email/", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			credentials: "include",
