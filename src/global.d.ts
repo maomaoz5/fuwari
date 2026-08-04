@@ -16,6 +16,7 @@ declare global {
 				container: string | Element,
 				options?: Record<string, unknown>,
 			) => string;
+			remove: (widgetId: string) => void;
 		};
 	}
 }
