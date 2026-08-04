@@ -68,14 +68,25 @@ import "../../styles/main.css";
     </div>
 
     <script>
+        let turnstileRendered = false;
+
         function initTurnstile() {
+            if (turnstileRendered) return;
             const turnstileContainer = document.querySelector('.cf-turnstile');
-            if (turnstileContainer && window.turnstile) {
-                turnstileContainer.innerHTML = '';
-                window.turnstile.render(turnstileContainer, {
-                    sitekey: '0x4AAAAAAEGI24vn79XN8ZH3',
-                });
+            if (!turnstileContainer) return;
+
+            function tryRender() {
+                if (window.turnstile) {
+                    turnstileContainer.innerHTML = '';
+                    window.turnstile.render(turnstileContainer, {
+                        sitekey: '0x4AAAAAAEGI24vn79XN8ZH3',
+                    });
+                    turnstileRendered = true;
+                } else {
+                    setTimeout(tryRender, 100);
+                }
             }
+            tryRender();
         }
 
         if (document.readyState === 'loading') {
@@ -84,6 +95,10 @@ import "../../styles/main.css";
             initTurnstile();
         }
         document.addEventListener('swup:page:view', initTurnstile);
+        // 兼容 Swup v4 hooks API
+        if (window.swup && window.swup.hooks) {
+            window.swup.hooks.on('page:view', initTurnstile);
+        }
 
         const form = document.getElementById('login-form') as HTMLFormElement;
         const errorMsg = document.getElementById('error-msg') as HTMLParagraphElement;
