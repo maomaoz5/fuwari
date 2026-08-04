@@ -26,13 +26,13 @@ describe("Admin management", () => {
 	});
 
 	it("should verify default admin credentials", async () => {
-		expect(await verifyAdmin("admin", "admin123")).toBe(true);
+		expect(await verifyAdmin("admin", "admin12345678")).toBe(true);
 		expect(await verifyAdmin("admin", "wrongpassword")).toBe(false);
-		expect(await verifyAdmin("nonexistent", "admin123")).toBe(false);
+		expect(await verifyAdmin("nonexistent", "admin12345678")).toBe(false);
 	});
 
 	it("should create a new admin", async () => {
-		const result = await createAdmin("testuser", "testpass123");
+		const result = await createAdmin("testuser", "testpass1234");
 		expect(result).toBe(true);
 
 		const admins = await listAdmins();
@@ -48,28 +48,28 @@ describe("Admin management", () => {
 	});
 
 	it("should verify newly created admin", async () => {
-		await createAdmin("newadmin", "securepass");
-		expect(await verifyAdmin("newadmin", "securepass")).toBe(true);
-		expect(await verifyAdmin("newadmin", "wrongpass")).toBe(false);
+		await createAdmin("newadmin", "securepass12");
+		expect(await verifyAdmin("newadmin", "securepass12")).toBe(true);
+		expect(await verifyAdmin("newadmin", "wrongpass123")).toBe(false);
 	});
 
 	it("should change password", async () => {
-		await createAdmin("user1", "oldpass");
-		expect(await verifyAdmin("user1", "oldpass")).toBe(true);
+		await createAdmin("user1", "oldpassword1");
+		expect(await verifyAdmin("user1", "oldpassword1")).toBe(true);
 
-		const result = await changePassword("user1", "newpass");
+		const result = await changePassword("user1", "newpassword1");
 		expect(result).toBe(true);
-		expect(await verifyAdmin("user1", "newpass")).toBe(true);
-		expect(await verifyAdmin("user1", "oldpass")).toBe(false);
+		expect(await verifyAdmin("user1", "newpassword1")).toBe(true);
+		expect(await verifyAdmin("user1", "oldpassword1")).toBe(false);
 	});
 
 	it("should not change password for nonexistent user", async () => {
-		const result = await changePassword("nonexistent", "newpass");
+		const result = await changePassword("nonexistent", "newpassword1");
 		expect(result).toBe(false);
 	});
 
 	it("should delete admin", async () => {
-		await createAdmin("todelete", "delpass");
+		await createAdmin("todelete", "delpassword1");
 		expect((await listAdmins()).length).toBe(2);
 
 		const result = await deleteAdmin("todelete");
@@ -87,7 +87,7 @@ describe("Admin management", () => {
 	});
 
 	it("should list admins without password info", async () => {
-		await createAdmin("user2", "pass2");
+		await createAdmin("user2", "password1234");
 		const admins = await listAdmins();
 
 		expect(admins.length).toBe(2);

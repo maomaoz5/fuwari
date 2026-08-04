@@ -121,7 +121,7 @@ export class PostgresDriver implements DbDriver {
 			["admin"],
 		);
 		if (existing.rows.length === 0) {
-			const { hash, salt } = hashPassword("admin123");
+			const { hash, salt } = hashPassword("admin12345678");
 			await pool.query(
 				"INSERT INTO admins (username, password_hash, password_salt) VALUES ($1, $2, $3)",
 				["admin", hash, salt],

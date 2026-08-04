@@ -106,7 +106,7 @@ export class SqliteDriver implements DbDriver {
 			.prepare("SELECT id FROM admins WHERE username = ?")
 			.get("admin") as { id: number } | undefined;
 		if (!existing) {
-			const { hash, salt } = hashPassword("admin123");
+			const { hash, salt } = hashPassword("admin12345678");
 			db.prepare(
 				"INSERT INTO admins (username, password_hash, password_salt) VALUES (?, ?, ?)",
 			).run("admin", hash, salt);

@@ -1,19 +1,21 @@
 import { defineMiddleware } from "astro:middleware";
 import { getSessionToken, validateSession } from "@/utils/admin/auth";
 
-// 不需要认证的路径
+// 不需要认证的路径（匹配时统一去除尾斜杠）
 const PUBLIC_PATHS = new Set([
-	"/admin/", // 登录页
-	"/admin", // 登录页（无尾斜杠）
+	"/admin", // 登录页
 ]);
 
 const PUBLIC_API_PATHS = new Set([
 	"/api/admin/auth", // 登录 API
 ]);
 
+// 去除尾斜杠，规范化路径
+const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
+
 export const onRequest = defineMiddleware(async (context, next) => {
 	const url = new URL(context.request.url);
-	const pathname = url.pathname;
+	const pathname = normalizePath(url.pathname);
 
 	// 检查是否需要认证
 	const isAdminPage = pathname.startsWith("/admin/");
