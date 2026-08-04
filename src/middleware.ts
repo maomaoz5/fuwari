@@ -11,6 +11,7 @@ const PUBLIC_API_PATHS = new Set([
 	"/api/admin/auth", // 登录 API
 	"/api/admin/auth/forgot-password", // 忘记密码 API
 	"/api/admin/auth/reset-password", // 重置密码 API
+	"/api/admin/captcha-config", // 验证码配置（登录页需要）
 ]);
 
 // 去除尾斜杠，规范化路径
