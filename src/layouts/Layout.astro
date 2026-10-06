@@ -149,10 +149,9 @@ const bannerOffset =
 		</script>
 		<style define:vars={{
 			configHue,
+			hue: configHue,
 			'page-width': `${PAGE_WIDTH}rem`,
-		}}>
-			:root { --hue: var(--configHue); }
-		</style>  <!-- defines global css variables. This will be applied to <html> <body> and some other elements idk why -->
+		}}></style>  <!-- defines global css variables. This will be applied to <html> <body> and some other elements idk why -->
 
 
 		<slot name="head"></slot>
