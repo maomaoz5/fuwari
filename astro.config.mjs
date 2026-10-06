@@ -30,7 +30,7 @@ import aiSummary from "./src/integrations/ai-summary.ts";
 // https://astro.build/config
 export default defineConfig({
 	adapter: node({ mode: "standalone" }),
-	site: "https://fuwari.vercel.app/",
+	site: "https://zidayo.com/",
 	base: "/",
 	trailingSlash: "always",
 	compressHTML: true, // Maintain Astro 5 whitespace behavior
