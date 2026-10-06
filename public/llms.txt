@@ -1,0 +1,14 @@
+# 猫猫的blog
+
+> 记录生活与代码的日常
+
+## 关于
+
+- 这是一个个人技术博客，主要分享编程经验、技术心得和生活日常
+- 使用 Astro 框架搭建
+
+## 链接
+
+- [首页](https://zidayo.com/)
+- [归档](https://zidayo.com/archive/)
+- [关于](https://zidayo.com/about/)
