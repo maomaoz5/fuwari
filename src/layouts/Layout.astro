@@ -78,9 +78,13 @@ const bannerOffset =
 
 <!DOCTYPE html>
 <html lang={siteLang} class="bg-[var(--page-bg)] transition text-[14px] md:text-[16px]"
+	  style={`--hue: ${configHue};`}
 	  data-overlayscrollbars-initialize
 >
 	<head>
+		<style is:global define:vars={{ configHue }}>
+			:root { --hue: var(--configHue); }
+		</style>
 
 		<title>{pageTitle}</title>
 

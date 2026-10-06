@@ -1,5 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 import { getSessionToken, validateSession } from "@/utils/admin/auth";
+import { siteConfig } from "@/config";
 
 // 不需要认证的路径（匹配时统一去除尾斜杠）
 const PUBLIC_PATHS = new Set([
@@ -27,9 +28,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 	if (!isAdminPage && !isAdminApi) {
 		const response = await next();
-		// 添加安全响应头
 		response.headers.set("X-Content-Type-Options", "nosniff");
 		response.headers.set("X-Frame-Options", "DENY");
+		const contentType = response.headers.get("Content-Type") || "";
+		if (contentType.includes("text/html")) {
+			const html = await response.text();
+			const hueStyle = `<style>:root{--hue:${siteConfig.themeColor.hue}}</style>`;
+			const injected = html.replace("</head>", `${hueStyle}</head>`);
+			return new Response(injected, {
+				status: response.status,
+				statusText: response.statusText,
+				headers: response.headers,
+			});
+		}
 		return response;
 	}
 
