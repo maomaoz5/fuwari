@@ -64,7 +64,7 @@ postsRoutes.put("/admin/posts/:slug", requireAuth, async (c) => {
 	if (!parsed.success) {
 		return fail(c, 400, "invalid_request", "Missing required fields: content, frontmatter");
 	}
-	writePost(slug, parsed.data.frontmatter as PostFrontmatter, parsed.data.content);
+	writePost(slug, parsed.data.frontmatter as unknown as PostFrontmatter, parsed.data.content);
 	return ok(c, { slug });
 });
 
