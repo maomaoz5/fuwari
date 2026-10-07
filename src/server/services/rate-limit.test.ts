@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ensureSchema, getDb, setDb } from "../db";
 import * as schema from "../db/schema-sqlite";
 import { checkRateLimit } from "./rate-limit";

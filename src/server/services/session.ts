@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { eq, lt } from "drizzle-orm";
-import { deleteCookie, setCookie } from "hono/cookie";
 import type { Context } from "hono";
+import { deleteCookie, setCookie } from "hono/cookie";
 import { getDb } from "../db";
 import { SESSION_TTL_MS } from "./security";
 
@@ -21,7 +21,9 @@ export async function createSession(
 	const expires = new Date(now.getTime() + SESSION_TTL_MS);
 	const { db, t } = await getDb();
 
-	await db.delete(t.sessions).where(lt(t.sessions.expiresAt, now.toISOString()));
+	await db
+		.delete(t.sessions)
+		.where(lt(t.sessions.expiresAt, now.toISOString()));
 	await db.insert(t.sessions).values({
 		tokenHash: sha256(token),
 		username,

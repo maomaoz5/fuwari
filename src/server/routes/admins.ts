@@ -39,7 +39,12 @@ adminsRoutes.post("/admin/admins", requireAuth, async (c) => {
 		await c.req.json().catch(() => null),
 	);
 	if (!parsed.success) {
-		return fail(c, 400, "invalid_request", "Missing required fields: username, password");
+		return fail(
+			c,
+			400,
+			"invalid_request",
+			"Missing required fields: username, password",
+		);
 	}
 	const strength = validatePasswordStrength(parsed.data.password);
 	if (!strength.valid) {
@@ -47,7 +52,12 @@ adminsRoutes.post("/admin/admins", requireAuth, async (c) => {
 	}
 	const success = await createAdmin(parsed.data.username, parsed.data.password);
 	if (!success) {
-		return fail(c, 409, "conflict", "Failed to create admin (username may already exist)");
+		return fail(
+			c,
+			409,
+			"conflict",
+			"Failed to create admin (username may already exist)",
+		);
 	}
 	return c.json({ ok: true, data: { username: parsed.data.username } }, 201);
 });
@@ -86,7 +96,12 @@ adminsRoutes.delete("/admin/admins/:username", requireAuth, async (c) => {
 	}
 	const success = await deleteAdmin(username);
 	if (!success) {
-		return fail(c, 400, "bad_request", "Cannot delete admin (not found or is the last admin)");
+		return fail(
+			c,
+			400,
+			"bad_request",
+			"Cannot delete admin (not found or is the last admin)",
+		);
 	}
 	return ok(c, { username });
 });

@@ -73,7 +73,8 @@ describe("posts routes", () => {
 		});
 		expect(del.status).toBe(200);
 		expect(
-			(await apiApp.request("/api/admin/posts/hello", { headers: auth() })).status,
+			(await apiApp.request("/api/admin/posts/hello", { headers: auth() }))
+				.status,
 		).toBe(404);
 	});
 

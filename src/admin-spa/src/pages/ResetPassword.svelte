@@ -1,66 +1,72 @@
 <script lang="ts">
-	import Captcha from "../components/Captcha.svelte";
-	import { api, ApiError } from "../api";
-	import { navigate } from "../router";
+import { ApiError, api } from "../api";
+import Captcha from "../components/Captcha.svelte";
+import { navigate } from "../router";
 
-	let { query }: { query: URLSearchParams } = $props();
-	const token = query.get("token") ?? "";
+let { query }: { query: URLSearchParams } = $props();
+const token = query.get("token") ?? "";
 
-	let newPassword = $state("");
-	let username = $state("");
-	let captchaToken = $state("");
-	let error = $state("");
-	let success = $state("");
-	let busy = $state(false);
-	let captchaKey = $state(0);
+let newPassword = $state("");
+let username = $state("");
+let captchaToken = $state("");
+let error = $state("");
+let success = $state("");
+let busy = $state(false);
+let captchaKey = $state(0);
 
-	async function reset(e: SubmitEvent) {
-		e.preventDefault();
-		error = "";
-		success = "";
-		busy = true;
-		try {
-			const res = await api<{ message: string }>("/api/admin/auth/reset-password", {
+async function reset(e: SubmitEvent) {
+	e.preventDefault();
+	error = "";
+	success = "";
+	busy = true;
+	try {
+		const res = await api<{ message: string }>(
+			"/api/admin/auth/reset-password",
+			{
 				method: "POST",
 				body: JSON.stringify({ token, newPassword }),
-			});
-			success = res.message;
-			setTimeout(() => navigate("#/login"), 1500);
-		} catch (err) {
-			error = err instanceof ApiError ? err.message : "网络错误";
-		} finally {
-			busy = false;
-		}
+			},
+		);
+		success = res.message;
+		setTimeout(() => navigate("#/login"), 1500);
+	} catch (err) {
+		error = err instanceof ApiError ? err.message : "网络错误";
+	} finally {
+		busy = false;
 	}
+}
 
-	async function request(e: SubmitEvent) {
-		e.preventDefault();
-		error = "";
-		success = "";
-		busy = true;
-		try {
-			const res = await api<{ message: string }>("/api/admin/auth/forgot-password", {
+async function request(e: SubmitEvent) {
+	e.preventDefault();
+	error = "";
+	success = "";
+	busy = true;
+	try {
+		const res = await api<{ message: string }>(
+			"/api/admin/auth/forgot-password",
+			{
 				method: "POST",
 				body: JSON.stringify({
 					username,
 					captchaToken: captchaToken || undefined,
 				}),
-			});
-			success = res.message;
-		} catch (err) {
-			if (err instanceof ApiError) {
-				error = err.message;
-				if (err.code === "captcha_failed") {
-					captchaToken = "";
-					captchaKey++;
-				}
-			} else {
-				error = "网络错误";
+			},
+		);
+		success = res.message;
+	} catch (err) {
+		if (err instanceof ApiError) {
+			error = err.message;
+			if (err.code === "captcha_failed") {
+				captchaToken = "";
+				captchaKey++;
 			}
-		} finally {
-			busy = false;
+		} else {
+			error = "网络错误";
 		}
+	} finally {
+		busy = false;
 	}
+}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">

@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { ApiError, api } from "../api";
 
 let summaries = [];
 let loading = true;
@@ -11,15 +12,9 @@ async function loadSummaries() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/ai-summary/");
-		if (res.status === 401) {
-			error = "认证已过期";
-			return;
-		}
-		if (!res.ok) throw new Error("Failed to load summaries");
-		summaries = await res.json();
+		summaries = await api("/api/admin/ai-summary");
 	} catch (e) {
-		error = `加载 AI 总结失败: ${e.message}`;
+		error = `加载 AI 总结失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		loading = false;
 	}
@@ -29,15 +24,12 @@ async function deleteSummary(slug) {
 	deletingSlug = slug;
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/ai-summary/${slug}/`, {
-			method: "DELETE",
-		});
-		if (!res.ok) throw new Error("Failed to delete");
+		await api(`/api/admin/ai-summary/${slug}`, { method: "DELETE" });
 		summaries = summaries.filter((s) => s.slug !== slug);
 		success = `已删除 ${slug} 的缓存`;
 		setTimeout(() => (success = ""), 3000);
 	} catch (e) {
-		error = `删除失败: ${e.message}`;
+		error = `删除失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		deletingSlug = "";
 	}
@@ -46,19 +38,13 @@ async function deleteSummary(slug) {
 async function regenerate(slug) {
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/ai-summary/${slug}/`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-		});
-		if (res.status === 501) {
-			error = "重新生成功能暂未实现";
-		} else {
-			error = "操作失败";
-		}
+		await api(`/api/admin/ai-summary/${slug}`, { method: "POST" });
+		error = "操作失败";
 	} catch (e) {
-		error = `请求失败: ${e.message}`;
+		error =
+			e instanceof ApiError && e.status === 501
+				? "重新生成功能暂未实现"
+				: "请求失败";
 	}
 }
 
@@ -83,7 +69,7 @@ onMount(() => {
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">AI 总结管理</h2>
     <button
-      on:click={loadSummaries}
+      onclick={loadSummaries}
       class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
     >
       刷新
@@ -129,13 +115,13 @@ onMount(() => {
               <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{formatDate(summary.modifiedAt)}</td>
               <td class="px-4 py-3 text-right">
                 <button
-                  on:click={() => regenerate(summary.slug)}
+                  onclick={() => regenerate(summary.slug)}
                   class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition mr-2"
                 >
                   重新生成
                 </button>
                 <button
-                  on:click={() => deleteSummary(summary.slug)}
+                  onclick={() => deleteSummary(summary.slug)}
                   disabled={deletingSlug === summary.slug}
                   class="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition disabled:opacity-50"
                 >

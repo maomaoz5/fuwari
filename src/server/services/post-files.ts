@@ -5,8 +5,7 @@ import { validateSlug } from "./security";
 
 function getPostsDir(): string {
 	return (
-		process.env.POSTS_DIR ||
-		path.join(process.cwd(), "src", "content", "posts")
+		process.env.POSTS_DIR || path.join(process.cwd(), "src", "content", "posts")
 	);
 }
 

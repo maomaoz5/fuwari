@@ -7,9 +7,9 @@ import {
 	createPost,
 	deletePost,
 	listPosts,
+	type PostFrontmatter,
 	readPost,
 	writePost,
-	type PostFrontmatter,
 } from "../services/post-files";
 import { validateSlug } from "../services/security";
 
@@ -30,16 +30,27 @@ export const postsRoutes = new Hono<AppEnv>();
 postsRoutes.get("/admin/posts", requireAuth, (c) => ok(c, listPosts()));
 
 postsRoutes.post("/admin/posts", requireAuth, async (c) => {
-	const parsed = CreatePostSchema.safeParse(await c.req.json().catch(() => null));
+	const parsed = CreatePostSchema.safeParse(
+		await c.req.json().catch(() => null),
+	);
 	if (!parsed.success) {
-		return fail(c, 400, "invalid_request", "Missing required fields: slug, title, content");
+		return fail(
+			c,
+			400,
+			"invalid_request",
+			"Missing required fields: slug, title, content",
+		);
 	}
 	const { slug, title, content, frontmatter } = parsed.data;
 	if (!validateSlug(slug)) {
 		return fail(c, 400, "invalid_slug", "Invalid slug format");
 	}
 	try {
-		createPost(slug, { title, ...(frontmatter ?? {}) } as PostFrontmatter, content);
+		createPost(
+			slug,
+			{ title, ...(frontmatter ?? {}) } as PostFrontmatter,
+			content,
+		);
 	} catch (err) {
 		if (err instanceof Error && err.message.includes("already exists")) {
 			return fail(c, 409, "conflict", err.message);
@@ -51,7 +62,8 @@ postsRoutes.post("/admin/posts", requireAuth, async (c) => {
 
 postsRoutes.get("/admin/posts/:slug", requireAuth, (c) => {
 	const slug = c.req.param("slug");
-	if (!validateSlug(slug)) return fail(c, 400, "invalid_slug", "Invalid slug format");
+	if (!validateSlug(slug))
+		return fail(c, 400, "invalid_slug", "Invalid slug format");
 	const post = readPost(slug);
 	if (!post) return fail(c, 404, "not_found", "Post not found");
 	return ok(c, post);
@@ -59,18 +71,31 @@ postsRoutes.get("/admin/posts/:slug", requireAuth, (c) => {
 
 postsRoutes.put("/admin/posts/:slug", requireAuth, async (c) => {
 	const slug = c.req.param("slug");
-	if (!validateSlug(slug)) return fail(c, 400, "invalid_slug", "Invalid slug format");
-	const parsed = UpdatePostSchema.safeParse(await c.req.json().catch(() => null));
+	if (!validateSlug(slug))
+		return fail(c, 400, "invalid_slug", "Invalid slug format");
+	const parsed = UpdatePostSchema.safeParse(
+		await c.req.json().catch(() => null),
+	);
 	if (!parsed.success) {
-		return fail(c, 400, "invalid_request", "Missing required fields: content, frontmatter");
+		return fail(
+			c,
+			400,
+			"invalid_request",
+			"Missing required fields: content, frontmatter",
+		);
 	}
-	writePost(slug, parsed.data.frontmatter as unknown as PostFrontmatter, parsed.data.content);
+	writePost(
+		slug,
+		parsed.data.frontmatter as unknown as PostFrontmatter,
+		parsed.data.content,
+	);
 	return ok(c, { slug });
 });
 
 postsRoutes.delete("/admin/posts/:slug", requireAuth, (c) => {
 	const slug = c.req.param("slug");
-	if (!validateSlug(slug)) return fail(c, 400, "invalid_slug", "Invalid slug format");
+	if (!validateSlug(slug))
+		return fail(c, 400, "invalid_slug", "Invalid slug format");
 	const deleted = deletePost(slug);
 	if (!deleted) return fail(c, 404, "not_found", "Post not found");
 	return ok(c, { slug });

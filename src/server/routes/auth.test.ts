@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { initTestDb } from "../db/testing";
 import { apiApp } from "../app";
+import { initTestDb } from "../db/testing";
 import { storeResetToken } from "../services/admins-repo";
 
 const IP = { "x-forwarded-for": "9.9.9.9" };
@@ -136,7 +136,11 @@ describe("forgot-password", () => {
 
 describe("reset-password", () => {
 	it("consumes valid token and changes password", async () => {
-		await storeResetToken("admin", "tok123", new Date(Date.now() + 30 * 60 * 1000));
+		await storeResetToken(
+			"admin",
+			"tok123",
+			new Date(Date.now() + 30 * 60 * 1000),
+		);
 		const res = await apiApp.request(
 			"/api/admin/auth/reset-password",
 			jsonInit({ token: "tok123", newPassword: "newpassword123" }),
@@ -162,7 +166,11 @@ describe("reset-password", () => {
 	});
 
 	it("rejects weak password", async () => {
-		await storeResetToken("admin", "tok456", new Date(Date.now() + 30 * 60 * 1000));
+		await storeResetToken(
+			"admin",
+			"tok456",
+			new Date(Date.now() + 30 * 60 * 1000),
+		);
 		const res = await apiApp.request(
 			"/api/admin/auth/reset-password",
 			jsonInit({ token: "tok456", newPassword: "short" }),

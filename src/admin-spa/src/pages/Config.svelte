@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { ApiError, api } from "../api";
 
 let config = {};
 let loading = true;
@@ -29,16 +30,10 @@ async function loadConfig() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/config/");
-		if (res.status === 401) {
-			error = "认证已过期";
-			return;
-		}
-		if (!res.ok) throw new Error("Failed to load config");
-		config = await res.json();
+		config = await api("/api/admin/config");
 		applyConfig();
 	} catch (e) {
-		error = `加载配置失败: ${e.message}`;
+		error = `加载配置失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		loading = false;
 	}
@@ -115,18 +110,14 @@ async function saveConfig() {
 	};
 
 	try {
-		const res = await fetch("/api/admin/config/", {
+		await api("/api/admin/config", {
 			method: "PUT",
-			headers: {
-				"Content-Type": "application/json",
-			},
 			body: JSON.stringify(overrides),
 		});
-		if (!res.ok) throw new Error("保存失败");
 		success = "配置保存成功！";
 		setTimeout(() => (success = ""), 3000);
 	} catch (e) {
-		error = `保存失败: ${e.message}`;
+		error = `保存失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		saving = false;
 	}
@@ -141,7 +132,7 @@ onMount(() => {
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">站点配置</h2>
     <button
-      on:click={saveConfig}
+      onclick={saveConfig}
       disabled={saving}
       class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium disabled:opacity-50"
     >

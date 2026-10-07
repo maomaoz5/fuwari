@@ -77,7 +77,11 @@ export async function getCaptchaProvider(): Promise<
 		string
 	>;
 	const provider = captcha.provider || "turnstile";
-	if (provider !== "turnstile" && provider !== "hcaptcha" && provider !== "none")
+	if (
+		provider !== "turnstile" &&
+		provider !== "hcaptcha" &&
+		provider !== "none"
+	)
 		return "turnstile";
 	return provider;
 }
@@ -101,9 +105,9 @@ export async function getCaptchaSiteKey(): Promise<string> {
 	const captcha = (config.captcha || {}) as Record<string, string>;
 
 	return provider === "turnstile"
-		? (captcha.turnstileSiteKey || "")
+		? captcha.turnstileSiteKey || ""
 		: provider === "hcaptcha"
-			? (captcha.hcaptchaSiteKey || "")
+			? captcha.hcaptchaSiteKey || ""
 			: "";
 }
 
@@ -113,9 +117,9 @@ export async function getCaptchaSiteKey(): Promise<string> {
 export async function getCaptchaSecretKey(): Promise<string> {
 	const provider = await getCaptchaProvider();
 	return provider === "turnstile"
-		? (process.env.TURNSTILE_SECRET_KEY || "")
+		? process.env.TURNSTILE_SECRET_KEY || ""
 		: provider === "hcaptcha"
-			? (process.env.HCAPTCHA_SECRET_KEY || "")
+			? process.env.HCAPTCHA_SECRET_KEY || ""
 			: "";
 }
 

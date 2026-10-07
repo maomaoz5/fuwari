@@ -1,9 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { drizzle, type BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
-import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { sql } from "drizzle-orm";
+import {
+	type BetterSQLite3Database,
+	drizzle,
+} from "drizzle-orm/better-sqlite3";
+import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as pgSchema from "./schema-pg";
 import * as sqliteSchema from "./schema-sqlite";
 
@@ -15,11 +18,15 @@ export type Db = SqliteDb;
 export type Tables = typeof sqliteSchema;
 
 export function getDialect(): "sqlite" | "postgres" {
-	return (process.env.DB_TYPE || "sqlite") === "postgres" ? "postgres" : "sqlite";
+	return (process.env.DB_TYPE || "sqlite") === "postgres"
+		? "postgres"
+		: "sqlite";
 }
 
 export function getTables(): Tables {
-	return (getDialect() === "postgres" ? pgSchema : sqliteSchema) as unknown as Tables;
+	return (getDialect() === "postgres"
+		? pgSchema
+		: sqliteSchema) as unknown as Tables;
 }
 
 let db: Db | null = null;
@@ -62,9 +69,9 @@ const SQLITE_DDL = [
 		count INTEGER NOT NULL DEFAULT 0,
 		window_expires_at TEXT NOT NULL
 	)`,
-	`CREATE INDEX IF NOT EXISTS idx_page_views_visited_at ON page_views(visited_at)`,
-	`CREATE INDEX IF NOT EXISTS idx_article_views_visited_at ON article_views(visited_at)`,
-	`CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)`,
+	"CREATE INDEX IF NOT EXISTS idx_page_views_visited_at ON page_views(visited_at)",
+	"CREATE INDEX IF NOT EXISTS idx_article_views_visited_at ON article_views(visited_at)",
+	"CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)",
 ];
 
 const PG_DDL = [
@@ -101,12 +108,12 @@ const PG_DDL = [
 		count INTEGER NOT NULL DEFAULT 0,
 		window_expires_at TIMESTAMPTZ NOT NULL
 	)`,
-	`CREATE INDEX IF NOT EXISTS idx_page_views_visited_at ON page_views(visited_at)`,
-	`CREATE INDEX IF NOT EXISTS idx_article_views_visited_at ON article_views(visited_at)`,
-	`CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)`,
+	"CREATE INDEX IF NOT EXISTS idx_page_views_visited_at ON page_views(visited_at)",
+	"CREATE INDEX IF NOT EXISTS idx_article_views_visited_at ON article_views(visited_at)",
+	"CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)",
 	`ALTER TABLE admins ADD COLUMN IF NOT EXISTS email TEXT DEFAULT ''`,
 	`ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token TEXT DEFAULT ''`,
-	`ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ DEFAULT NULL`,
+	"ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ DEFAULT NULL",
 ];
 
 export async function ensureSchema(db: Db): Promise<void> {
@@ -133,7 +140,8 @@ export async function getDb(): Promise<{ db: Db; t: Tables }> {
 				);
 			}
 			const dialectDb = drizzlePg(new pg.Pool({ connectionString, max: 5 }));
-			db = dialectDb as unknown as Db;		} else {
+			db = dialectDb as unknown as Db;
+		} else {
 			const dataDir = path.join(process.cwd(), "data");
 			if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 			db = drizzle(new Database(path.join(dataDir, "stats.db")), {

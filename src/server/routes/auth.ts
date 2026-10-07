@@ -5,19 +5,19 @@ import type { AppEnv } from "../http";
 import { fail, ok } from "../http";
 import { requireAuth } from "../middleware/auth";
 import {
-	buildCaptchaInfo,
-	CaptchaVerificationError,
-	getCaptchaProvider,
-	verifyCaptcha,
-} from "../services/captcha";
-import { sendResetEmail } from "../services/email";
-import {
 	changePassword,
 	consumeResetToken,
 	getAdminEmail,
 	storeResetToken,
 	verifyAdmin,
 } from "../services/admins-repo";
+import {
+	buildCaptchaInfo,
+	CaptchaVerificationError,
+	getCaptchaProvider,
+	verifyCaptcha,
+} from "../services/captcha";
+import { sendResetEmail } from "../services/email";
 import { checkRateLimit } from "../services/rate-limit";
 import {
 	RATE_LIMIT_MAX_ATTEMPTS,
@@ -94,7 +94,10 @@ authRoutes.post("/admin/auth", async (c) => {
 
 	const captchaError = await verifyCaptchaOrThrow(captchaToken ?? "");
 	if (captchaError) {
-		return c.json({ ok: false, error: captchaError.payload }, captchaError.status);
+		return c.json(
+			{ ok: false, error: captchaError.payload },
+			captchaError.status,
+		);
 	}
 
 	const valid = await verifyAdmin(username, password);
@@ -129,7 +132,10 @@ authRoutes.post("/admin/auth/forgot-password", async (c) => {
 
 	const captchaError = await verifyCaptchaOrThrow(captchaToken ?? "");
 	if (captchaError) {
-		return c.json({ ok: false, error: captchaError.payload }, captchaError.status);
+		return c.json(
+			{ ok: false, error: captchaError.payload },
+			captchaError.status,
+		);
 	}
 
 	const email = await getAdminEmail(username);

@@ -1,36 +1,31 @@
 <script>
 import { onMount } from "svelte";
+import { ApiError, api } from "../api";
+import { navigate } from "../router";
 
-export let slug = "";
+let { slug = null } = $props();
 
-let isNew = !slug;
-let loading = !isNew;
-let saving = false;
-let error = "";
-let success = "";
+let isNew = $derived(!slug);
+let loading = $state(!slug);
+let saving = $state(false);
+let error = $state("");
+let success = $state("");
 
-// Form fields
-let newSlug = "";
-let title = "";
-let content = "";
-let published = "";
-let description = "";
-let tagsStr = "";
-let category = "";
-let draft = false;
+let newSlug = $state("");
+let title = $state("");
+let content = $state("");
+let published = $state("");
+let description = $state("");
+let tagsStr = $state("");
+let category = $state("");
+let draft = $state(false);
 
 async function loadPost() {
 	if (isNew) return;
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/posts/${slug}/`);
-		if (res.status === 401) {
-			error = "认证已过期";
-			return;
-		}
-		if (!res.ok) throw new Error("Failed to load post");
-		const data = await res.json();
+		const data = await api(`/api/admin/posts/${slug}`);
 		title = data.title || "";
 		content = data.content || "";
 		published = data.published || "";
@@ -39,7 +34,7 @@ async function loadPost() {
 		category = data.category || "";
 		draft = data.draft || false;
 	} catch (e) {
-		error = `加载文章失败: ${e.message}`;
+		error = `加载文章失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		loading = false;
 	}
@@ -54,7 +49,6 @@ async function savePost() {
 		.split(",")
 		.map((t) => t.trim())
 		.filter(Boolean);
-
 	const frontmatter = {
 		title,
 		published: published || new Date().toISOString().slice(0, 10),
@@ -65,18 +59,14 @@ async function savePost() {
 	};
 
 	try {
-		let res;
 		if (isNew) {
 			if (!newSlug.trim()) {
 				error = "请输入文章 slug";
 				saving = false;
 				return;
 			}
-			res = await fetch("/api/admin/posts/", {
+			await api("/api/admin/posts", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
 				body: JSON.stringify({
 					slug: newSlug.trim(),
 					title,
@@ -85,42 +75,25 @@ async function savePost() {
 				}),
 			});
 		} else {
-			res = await fetch(`/api/admin/posts/${slug}`, {
+			await api(`/api/admin/posts/${slug}`, {
 				method: "PUT",
-				headers: {
-					"Content-Type": "application/json",
-				},
 				body: JSON.stringify({ content, frontmatter }),
 			});
 		}
-
-		if (!res.ok) {
-			const data = await res.json().catch(() => ({}));
-			throw new Error(data.error || "保存失败");
-		}
-
 		success = "保存成功！";
-		setTimeout(() => {
-			navigate("#posts");
-		}, 800);
+		setTimeout(() => navigate("#/posts"), 800);
 	} catch (e) {
-		error = `保存失败: ${e.message}`;
+		error = `保存失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		saving = false;
 	}
 }
 
-function navigate(hash) {
-	window.dispatchEvent(new CustomEvent("admin-navigate", { detail: { hash } }));
-}
-
 function goBack() {
-	navigate("#posts");
+	navigate("#/posts");
 }
 
-onMount(() => {
-	loadPost();
-});
+onMount(loadPost);
 </script>
 
 <div>
@@ -129,7 +102,7 @@ onMount(() => {
       {isNew ? '新建文章' : `编辑文章: ${slug}`}
     </h2>
     <button
-      on:click={goBack}
+      onclick={goBack}
       class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
     >
       返回列表
@@ -154,7 +127,6 @@ onMount(() => {
     </div>
   {:else}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Left: Markdown editor -->
       <div class="lg:col-span-2">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           {#if isNew}
@@ -185,7 +157,6 @@ onMount(() => {
         </div>
       </div>
 
-      <!-- Right: Frontmatter form -->
       <div>
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">文章信息</h3>
@@ -240,25 +211,20 @@ onMount(() => {
           </div>
 
           <div class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              bind:checked={draft}
-              id="draft-check"
-              class="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
-            />
+            <input type="checkbox" bind:checked={draft} id="draft-check" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600" />
             <label for="draft-check" class="text-sm text-gray-700 dark:text-gray-300">草稿</label>
           </div>
 
           <div class="pt-4 flex gap-3">
             <button
-              on:click={savePost}
+              onclick={savePost}
               disabled={saving}
               class="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium disabled:opacity-50"
             >
               {saving ? '保存中...' : '保存'}
             </button>
             <button
-              on:click={goBack}
+              onclick={goBack}
               class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
               取消

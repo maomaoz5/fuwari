@@ -34,7 +34,8 @@ aiSummaryRoutes.get("/admin/ai-summary", requireAuth, (c) => {
 
 aiSummaryRoutes.delete("/admin/ai-summary/:slug", requireAuth, (c) => {
 	const slug = c.req.param("slug");
-	if (!validateSlug(slug)) return fail(c, 400, "invalid_slug", "Invalid slug format");
+	if (!validateSlug(slug))
+		return fail(c, 400, "invalid_slug", "Invalid slug format");
 	const filePath = path.join(getSummariesDir(), `${slug}.json`);
 	if (!fs.existsSync(filePath)) {
 		return fail(c, 404, "not_found", "AI summary not found");
@@ -45,7 +46,10 @@ aiSummaryRoutes.delete("/admin/ai-summary/:slug", requireAuth, (c) => {
 
 aiSummaryRoutes.post("/admin/ai-summary/:slug", requireAuth, (c) => {
 	return c.json(
-		{ ok: false, error: { code: "not_implemented", message: "not implemented" } },
+		{
+			ok: false,
+			error: { code: "not_implemented", message: "not implemented" },
+		},
 		501,
 	);
 });

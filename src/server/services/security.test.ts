@@ -2,10 +2,10 @@ import crypto from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
 	hashPassword,
-	verifyPassword,
-	validateSlug,
-	validatePasswordStrength,
 	PBKDF2_ITERATIONS_OLD,
+	validatePasswordStrength,
+	validateSlug,
+	verifyPassword,
 } from "./security";
 
 describe("security", () => {

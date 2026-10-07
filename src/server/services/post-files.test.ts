@@ -41,7 +41,11 @@ describe("post files", () => {
 	});
 
 	it("write updates content", () => {
-		writePost("my-post", { title: "新标题", published: "2026-10-07" }, "updated");
+		writePost(
+			"my-post",
+			{ title: "新标题", published: "2026-10-07" },
+			"updated",
+		);
 		expect(readPost("my-post")?.content).toBe("updated\n");
 	});
 

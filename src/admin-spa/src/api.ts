@@ -18,18 +18,19 @@ function isPublicRoute(): boolean {
 
 export async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
 	// 站点 trailingSlash=always:无尾斜杠的路径会被 Astro dev server 拦截 404
-	const normalizedPath = path.endsWith("/") || path.includes("?") ? path : `${path}/`;
+	const queryIdx = path.indexOf("?");
+	const basePath = queryIdx >= 0 ? path.slice(0, queryIdx) : path;
+	const query = queryIdx >= 0 ? path.slice(queryIdx) : "";
+	const normalizedPath = basePath.endsWith("/") ? path : `${basePath}/${query}`;
 	const res = await fetch(normalizedPath, {
 		headers: { "Content-Type": "application/json", ...(opts.headers ?? {}) },
 		...opts,
 	});
-	const body = (await res.json().catch(() => null)) as
-		| {
-				ok: boolean;
-				data?: T;
-				error?: { code: string; message: string } & Record<string, unknown>;
-		  }
-		| null;
+	const body = (await res.json().catch(() => null)) as {
+		ok: boolean;
+		data?: T;
+		error?: { code: string; message: string } & Record<string, unknown>;
+	} | null;
 
 	if (!res.ok || !body?.ok) {
 		if (res.status === 401 && !isPublicRoute()) {

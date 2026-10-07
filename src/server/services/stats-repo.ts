@@ -1,4 +1,4 @@
-import { sql, type SQL } from "drizzle-orm";
+import { type SQL, sql } from "drizzle-orm";
 import { getDb, getDialect, type Tables } from "../db";
 
 export type StatsRange = "7d" | "30d" | "all";
@@ -38,9 +38,7 @@ export async function recordVisit(pagePath: string): Promise<void> {
 
 export async function recordArticleView(slug: string): Promise<void> {
 	const { db, t } = await getDb();
-	await db
-		.insert(t.articleViews)
-		.values({ slug, visitedAt: nowSqlDatetime() });
+	await db.insert(t.articleViews).values({ slug, visitedAt: nowSqlDatetime() });
 }
 
 async function dailyFrom(

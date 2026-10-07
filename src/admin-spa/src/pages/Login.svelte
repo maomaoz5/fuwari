@@ -1,43 +1,43 @@
 <script lang="ts">
-	import Captcha from "../components/Captcha.svelte";
-	import { api, ApiError } from "../api";
-	import { navigate } from "../router";
+import { ApiError, api } from "../api";
+import Captcha from "../components/Captcha.svelte";
+import { navigate } from "../router";
 
-	let username = $state("");
-	let password = $state("");
-	let token = $state("");
-	let error = $state("");
-	let busy = $state(false);
-	let captchaKey = $state(0);
+let username = $state("");
+let password = $state("");
+let token = $state("");
+let error = $state("");
+let busy = $state(false);
+let captchaKey = $state(0);
 
-	async function submit(e: SubmitEvent) {
-		e.preventDefault();
-		error = "";
-		busy = true;
-		try {
-			await api("/api/admin/auth", {
-				method: "POST",
-				body: JSON.stringify({
-					username,
-					password,
-					captchaToken: token || undefined,
-				}),
-			});
-			navigate("#/posts");
-		} catch (err) {
-			if (err instanceof ApiError) {
-				error = err.message;
-				if (err.code === "captcha_failed") {
-					token = "";
-					captchaKey++;
-				}
-			} else {
-				error = "网络错误";
+async function submit(e: SubmitEvent) {
+	e.preventDefault();
+	error = "";
+	busy = true;
+	try {
+		await api("/api/admin/auth", {
+			method: "POST",
+			body: JSON.stringify({
+				username,
+				password,
+				captchaToken: token || undefined,
+			}),
+		});
+		navigate("#/posts");
+	} catch (err) {
+		if (err instanceof ApiError) {
+			error = err.message;
+			if (err.code === "captcha_failed") {
+				token = "";
+				captchaKey++;
 			}
-		} finally {
-			busy = false;
+		} else {
+			error = "网络错误";
 		}
+	} finally {
+		busy = false;
 	}
+}
 </script>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">

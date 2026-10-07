@@ -2,8 +2,8 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import {
 	hashPassword,
-	verifyPassword,
 	validatePasswordStrength,
+	verifyPassword,
 } from "./security";
 
 export async function ensureDefaultAdmin(): Promise<void> {
