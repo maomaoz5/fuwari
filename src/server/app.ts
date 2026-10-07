@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { authRoutes } from "./routes/auth";
+import { postsRoutes } from "./routes/posts";
 
 export type AppEnv = { Variables: { username: string } };
 
@@ -25,6 +26,7 @@ export function createServerApp(): Hono<AppEnv> {
 	app.get("/__health", (c) => c.json({ ok: true, data: { status: "up" } }));
 
 	app.route("/", authRoutes);
+	app.route("/", postsRoutes);
 
 	root.notFound((c) =>
 		c.json({ ok: false, error: { code: "not_found", message: "Not Found" } }, 404),
