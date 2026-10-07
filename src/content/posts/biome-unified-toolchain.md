@@ -57,13 +57,15 @@ npm install --save-dev @biomejs/biome
 npx biome init
 ```
 
-这会生成一个 `biome.json` 文件：
+这会生成一个 `biome.json` 文件（以下为 Biome 2.x 的配置格式）：
 
 ```json
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
-  "organizeImports": {
-    "enabled": true
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
   },
   "linter": {
     "enabled": true,
@@ -71,13 +73,17 @@ npx biome init
       "recommended": true
     }
   },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   }
 }
 ```
+
+> 注意：从 Biome 2.x 开始，导入排序（organize imports）被归到了 `assist` 命名空间下，不再使用早期 1.x 里顶层的 `organizeImports.enabled`。如果你手上有老的 1.x 配置，运行 `biome migrate` 就能自动升级到最新 schema。
 
 在 `package.json` 中添加脚本：
 
