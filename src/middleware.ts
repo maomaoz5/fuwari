@@ -2,14 +2,10 @@ import { defineMiddleware } from "astro:middleware";
 import { siteConfig } from "@/config";
 import { apiApp } from "@/server/app";
 
-const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
-
 export const onRequest = defineMiddleware(async (context, next) => {
 	const url = new URL(context.request.url);
-	const pathname = normalizePath(url.pathname);
 
-	// spike:仅验证 Astro middleware → Hono 转发链路可行
-	if (pathname === "/api/__health") {
+	if (url.pathname.startsWith("/api/")) {
 		return apiApp.fetch(context.request);
 	}
 
