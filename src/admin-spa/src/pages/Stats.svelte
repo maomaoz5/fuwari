@@ -1,5 +1,6 @@
 <script>
 import { onMount } from "svelte";
+import { ApiError, api } from "../api";
 
 let stats = null;
 let loading = true;
@@ -10,15 +11,9 @@ async function loadStats() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch(`/api/admin/stats/?range=${range}`);
-		if (res.status === 401) {
-			error = "认证已过期";
-			return;
-		}
-		if (!res.ok) throw new Error("Failed to load stats");
-		stats = await res.json();
+		stats = await api(`/api/admin/stats?range=${range}`);
 	} catch (e) {
-		error = `加载统计数据失败: ${e.message}`;
+		error = `加载统计数据失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		loading = false;
 	}
@@ -43,7 +38,7 @@ onMount(() => {
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">数据统计</h2>
     <div class="flex gap-2">
       <button
-        on:click={() => setRange('7d')}
+        onclick={() => setRange('7d')}
         class="px-3 py-1.5 text-sm rounded-lg transition {range === '7d'
           ? 'bg-blue-600 text-white'
           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
@@ -51,7 +46,7 @@ onMount(() => {
         7 天
       </button>
       <button
-        on:click={() => setRange('30d')}
+        onclick={() => setRange('30d')}
         class="px-3 py-1.5 text-sm rounded-lg transition {range === '30d'
           ? 'bg-blue-600 text-white'
           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
@@ -59,7 +54,7 @@ onMount(() => {
         30 天
       </button>
       <button
-        on:click={() => setRange('all')}
+        onclick={() => setRange('all')}
         class="px-3 py-1.5 text-sm rounded-lg transition {range === 'all'
           ? 'bg-blue-600 text-white'
           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}"
@@ -80,7 +75,6 @@ onMount(() => {
       <p class="text-gray-500 dark:text-gray-400">加载中...</p>
     </div>
   {:else if stats}
-    <!-- Summary cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">总页面访问量</p>
@@ -92,7 +86,6 @@ onMount(() => {
       </div>
     </div>
 
-    <!-- Daily chart -->
     {#if stats.dailyViews && stats.dailyViews.length > 0}
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">每日访问量</h3>
@@ -114,7 +107,6 @@ onMount(() => {
       </div>
     {/if}
 
-    <!-- Top articles -->
     {#if stats.topArticles && stats.topArticles.length > 0}
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">热门文章 Top 5</h3>

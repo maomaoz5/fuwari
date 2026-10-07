@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { initTestDb } from "../db/testing";
 import {
-	createAdmin,
-	verifyAdmin,
-	listAdmins,
 	changePassword,
+	consumeResetToken,
+	createAdmin,
 	deleteAdmin,
 	getAdminEmail,
+	listAdmins,
 	setAdminEmail,
 	storeResetToken,
-	consumeResetToken,
+	verifyAdmin,
 } from "./admins-repo";
 
 beforeEach(async () => {

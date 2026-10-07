@@ -18,7 +18,13 @@ describe("admin stats", () => {
 	});
 
 	it("returns stats with default/valid/invalid range", async () => {
-		for (const range of ["", "?range=7d", "?range=30d", "?range=all", "?range=bogus"]) {
+		for (const range of [
+			"",
+			"?range=7d",
+			"?range=30d",
+			"?range=all",
+			"?range=bogus",
+		]) {
 			const res = await apiApp.request(`/api/admin/stats${range}`, {
 				headers: { cookie },
 			});
@@ -49,7 +55,9 @@ describe("public stats record", () => {
 
 		const stats = (
 			await (
-				await apiApp.request("/api/admin/stats?range=all", { headers: { cookie } })
+				await apiApp.request("/api/admin/stats?range=all", {
+					headers: { cookie },
+				})
 			).json()
 		).data;
 		expect(stats.totalPageViews).toBe(2);

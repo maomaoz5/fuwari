@@ -35,7 +35,10 @@ describe("config routes", () => {
 		const res = await apiApp.request("/api/admin/config", {
 			method: "PUT",
 			headers: { cookie, "Content-Type": "application/json" },
-			body: JSON.stringify({ site: { title: "测试站" }, captcha: { provider: "none" } }),
+			body: JSON.stringify({
+				site: { title: "测试站" },
+				captcha: { provider: "none" },
+			}),
 		});
 		expect(res.status).toBe(200);
 		const saved = JSON.parse(fs.readFileSync(overridesPath, "utf-8"));

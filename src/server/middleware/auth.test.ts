@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { Hono } from "hono";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ensureSchema, setDb } from "../db";
 import * as schema from "../db/schema-sqlite";
-import { createSession, revokeSession } from "../services/session";
 import type { AppEnv } from "../http";
+import { createSession, revokeSession } from "../services/session";
 import { requireAuth } from "./auth";
 
 const app = new Hono<AppEnv>();

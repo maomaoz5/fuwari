@@ -15,5 +15,8 @@ export function fail(
 	message: string,
 	extra?: Record<string, unknown>,
 ) {
-	return c.json({ ok: false, error: { code, message, ...(extra ?? {}) } }, status);
+	return c.json(
+		{ ok: false, error: { code, message, ...(extra ?? {}) } },
+		status,
+	);
 }

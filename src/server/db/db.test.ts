@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
 import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
 import { eq } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { describe, expect, it } from "vitest";
 import { ensureSchema, getDb, getDialect, getTables, setDb } from "./index";
 import * as schema from "./schema-sqlite";
 
@@ -32,7 +32,10 @@ describe("db engine", () => {
 			windowExpiresAt: "2026-10-07T00:15:00Z",
 		});
 
-		const admins = await db.select().from(t.admins).where(eq(t.admins.username, "alice"));
+		const admins = await db
+			.select()
+			.from(t.admins)
+			.where(eq(t.admins.username, "alice"));
 		expect(admins).toHaveLength(1);
 		expect(admins[0].email).toBe("");
 

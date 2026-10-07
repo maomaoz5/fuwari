@@ -27,12 +27,12 @@ describe("captcha service", () => {
 	});
 
 	it("maps turnstile error codes", () => {
-		expect(mapCaptchaErrorCode("turnstile", "timeout-or-duplicate")).toMatchObject(
-			{
-				type: "timeout",
-				retryable: true,
-			},
-		);
+		expect(
+			mapCaptchaErrorCode("turnstile", "timeout-or-duplicate"),
+		).toMatchObject({
+			type: "timeout",
+			retryable: true,
+		});
 		expect(mapCaptchaErrorCode("hcaptcha", "challenge-closed")).toMatchObject({
 			type: "invalid_token",
 		});

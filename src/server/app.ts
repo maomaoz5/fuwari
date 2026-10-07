@@ -1,9 +1,9 @@
 import { Hono } from "hono";
+import { adminsRoutes } from "./routes/admins";
 import { aiSummaryRoutes } from "./routes/ai-summary";
 import { authRoutes } from "./routes/auth";
-import { postsRoutes } from "./routes/posts";
-import { adminsRoutes } from "./routes/admins";
 import { configRoutes } from "./routes/config";
+import { postsRoutes } from "./routes/posts";
 import { statsRoutes } from "./routes/stats";
 
 export type AppEnv = { Variables: { username: string } };
@@ -39,13 +39,19 @@ export function createServerApp(): Hono<AppEnv> {
 	root.onError((err, c) => {
 		console.error("[api]", c.req.method, c.req.path, err);
 		return c.json(
-			{ ok: false, error: { code: "internal", message: "Internal server error" } },
+			{
+				ok: false,
+				error: { code: "internal", message: "Internal server error" },
+			},
 			500,
 		);
 	});
 
 	root.notFound((c) =>
-		c.json({ ok: false, error: { code: "not_found", message: "Not Found" } }, 404),
+		c.json(
+			{ ok: false, error: { code: "not_found", message: "Not Found" } },
+			404,
+		),
 	);
 
 	return root;

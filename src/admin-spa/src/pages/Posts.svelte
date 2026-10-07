@@ -1,81 +1,52 @@
 <script>
 import { onMount } from "svelte";
+import { ApiError, api } from "../api";
+import { navigate } from "../router";
 
 let posts = [];
 let loading = true;
 let error = "";
 let deleteTarget = null;
 let deleting = false;
-let mounted = false;
 
 async function loadPosts() {
 	loading = true;
 	error = "";
 	try {
-		const res = await fetch("/api/admin/posts/");
-		if (res.status === 401) {
-			error = "认证已过期，请重新登录";
-			return;
-		}
-		if (!res.ok) throw new Error("Failed to load posts");
-		posts = await res.json();
+		posts = await api("/api/admin/posts");
 	} catch (e) {
-		error = `加载文章失败: ${e.message}`;
+		error = `加载文章失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		loading = false;
 	}
 }
 
-function navigate(hash) {
-	window.dispatchEvent(new CustomEvent("admin-navigate", { detail: { hash } }));
-}
-
-function editPost(slug) {
-	navigate(`#editor?slug=${slug}`);
-}
-
 function newPost() {
-	navigate("#editor");
-}
-
-function confirmDelete(post) {
-	deleteTarget = post;
-}
-
-function cancelDelete() {
-	deleteTarget = null;
+	navigate("#/posts/new");
 }
 
 async function doDelete() {
 	if (!deleteTarget) return;
 	deleting = true;
 	try {
-		const res = await fetch(`/api/admin/posts/${deleteTarget.slug}/`, {
-			method: "DELETE",
-		});
-		if (!res.ok) throw new Error("Failed to delete");
+		await api(`/api/admin/posts/${deleteTarget.slug}`, { method: "DELETE" });
 		posts = posts.filter((p) => p.slug !== deleteTarget.slug);
 		deleteTarget = null;
 	} catch (e) {
-		error = `删除失败: ${e.message}`;
+		error = `删除失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
 	} finally {
 		deleting = false;
 	}
 }
 
-onMount(() => {
-	mounted = true;
-});
-
-// 当组件已挂载时加载文章
-$: if (mounted) loadPosts();
+onMount(loadPosts);
 </script>
 
 <div>
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">文章管理</h2>
     <button
-      on:click={newPost}
+      onclick={newPost}
       class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
     >
       + 新建文章
@@ -96,7 +67,7 @@ $: if (mounted) loadPosts();
     <div class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
       <p class="text-gray-500 dark:text-gray-400 mb-4">暂无文章</p>
       <button
-        on:click={newPost}
+        onclick={newPost}
         class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
       >
         创建第一篇文章
@@ -117,7 +88,7 @@ $: if (mounted) loadPosts();
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           {#each posts as post}
-            <tr class="hover:bg-gray-50 dark:hover:bg-gray-750 transition">
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
               <td class="px-4 py-3">
                 <span class="text-sm font-medium text-gray-900 dark:text-white">{post.title}</span>
                 <span class="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{post.slug}</span>
@@ -144,13 +115,13 @@ $: if (mounted) loadPosts();
               <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{post.published || '-'}</td>
               <td class="px-4 py-3 text-right">
                 <button
-                  on:click={() => editPost(post.slug)}
+                  onclick={() => navigate(`#/posts/${post.slug}`)}
                   class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition mr-2"
                 >
                   编辑
                 </button>
                 <button
-                  on:click={() => confirmDelete(post)}
+                  onclick={() => (deleteTarget = post)}
                   class="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition"
                 >
                   删除
@@ -163,7 +134,6 @@ $: if (mounted) loadPosts();
     </div>
   {/if}
 
-  <!-- Delete confirmation modal -->
   {#if deleteTarget}
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm">
@@ -173,13 +143,13 @@ $: if (mounted) loadPosts();
         </p>
         <div class="flex justify-end gap-3">
           <button
-            on:click={cancelDelete}
+            onclick={() => (deleteTarget = null)}
             class="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
           >
             取消
           </button>
           <button
-            on:click={doDelete}
+            onclick={doDelete}
             disabled={deleting}
             class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50"
           >

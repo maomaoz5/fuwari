@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import { fail, type AppEnv } from "../http";
+import { type AppEnv, fail } from "../http";
 import { getTokenFromRequest, validateSession } from "../services/session";
 
 export const requireAuth = createMiddleware<AppEnv>(async (c, next) => {

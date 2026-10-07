@@ -20,8 +20,14 @@ export const admins = pgTable("admins", {
 export const sessions = pgTable("sessions", {
 	tokenHash: text("token_hash").primaryKey(),
 	username: text("username").notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull(),
-	expiresAt: timestamp("expires_at", { withTimezone: true, mode: "string" }).notNull(),
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "string",
+	}).notNull(),
+	expiresAt: timestamp("expires_at", {
+		withTimezone: true,
+		mode: "string",
+	}).notNull(),
 	ip: text("ip"),
 	userAgent: text("user_agent"),
 });
