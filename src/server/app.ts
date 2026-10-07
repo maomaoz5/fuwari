@@ -3,6 +3,7 @@ import { authRoutes } from "./routes/auth";
 import { postsRoutes } from "./routes/posts";
 import { adminsRoutes } from "./routes/admins";
 import { configRoutes } from "./routes/config";
+import { statsRoutes } from "./routes/stats";
 
 export type AppEnv = { Variables: { username: string } };
 
@@ -31,6 +32,7 @@ export function createServerApp(): Hono<AppEnv> {
 	app.route("/", postsRoutes);
 	app.route("/", adminsRoutes);
 	app.route("/", configRoutes);
+	app.route("/", statsRoutes);
 
 	root.notFound((c) =>
 		c.json({ ok: false, error: { code: "not_found", message: "Not Found" } }, 404),
