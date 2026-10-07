@@ -5,9 +5,10 @@ import { Hono } from "hono";
 import { ensureSchema, setDb } from "../db";
 import * as schema from "../db/schema-sqlite";
 import { createSession, revokeSession } from "../services/session";
+import type { AppEnv } from "../http";
 import { requireAuth } from "./auth";
 
-const app = new Hono();
+const app = new Hono<AppEnv>();
 app.use("/protected/*", requireAuth);
 app.get("/protected/whoami", (c) => c.json({ username: c.get("username") }));
 

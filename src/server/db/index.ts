@@ -9,7 +9,9 @@ import * as sqliteSchema from "./schema-sqlite";
 
 export type SqliteDb = BetterSQLite3Database<typeof sqliteSchema>;
 export type PgDb = NodePgDatabase<typeof pgSchema>;
-export type Db = SqliteDb | PgDb;
+// PG 实例在 getDb 中被转换为该形状:两个方言的查询构建器调用签名一致,
+// 表对象经 getTables() 也已对齐,联合类型会让 delete/insert 等调用处报 TS2349。
+export type Db = SqliteDb;
 export type Tables = typeof sqliteSchema;
 
 export function getDialect(): "sqlite" | "postgres" {
@@ -112,9 +114,9 @@ export async function ensureSchema(db: Db): Promise<void> {
 	const ddls = dialect === "postgres" ? PG_DDL : SQLITE_DDL;
 	for (const ddl of ddls) {
 		if (dialect === "postgres") {
-			await (db as PgDb).execute(sql.raw(ddl));
+			await (db as unknown as PgDb).execute(sql.raw(ddl));
 		} else {
-			(db as SqliteDb).run(sql.raw(ddl));
+			db.run(sql.raw(ddl));
 		}
 	}
 }
@@ -131,8 +133,7 @@ export async function getDb(): Promise<{ db: Db; t: Tables }> {
 				);
 			}
 			const dialectDb = drizzlePg(new pg.Pool({ connectionString, max: 5 }));
-			db = dialectDb as unknown as Db;
-		} else {
+			db = dialectDb as unknown as Db;		} else {
 			const dataDir = path.join(process.cwd(), "data");
 			if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 			db = drizzle(new Database(path.join(dataDir, "stats.db")), {
