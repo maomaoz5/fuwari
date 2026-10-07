@@ -38,7 +38,7 @@ $effect(() => {
 {#if route.name === "reset-password"}
 	<ResetPassword query={route.query} />
 {:else if route.name === "login"}
-	<Login />
+	<Login onLogin={() => (authed = true)} />
 {:else if authed}
 	<Dashboard {route} />
 {:else}
