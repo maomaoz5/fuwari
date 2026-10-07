@@ -45,3 +45,4 @@ data/stats.db-journal
 logs/
 *.error.log
 *.out.log
+public/admin/
