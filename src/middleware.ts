@@ -1,78 +1,31 @@
 import { defineMiddleware } from "astro:middleware";
-import { getSessionToken, validateSession } from "@/utils/admin/auth";
 import { siteConfig } from "@/config";
+import { apiApp } from "@/server/app";
 
-// 不需要认证的路径（匹配时统一去除尾斜杠）
-const PUBLIC_PATHS = new Set([
-	"/admin", // 登录页
-	"/admin/reset-password", // 密码重置页
-]);
-
-const PUBLIC_API_PATHS = new Set([
-	"/api/admin/auth", // 登录 API
-	"/api/admin/auth/forgot-password", // 忘记密码 API
-	"/api/admin/auth/reset-password", // 重置密码 API
-	"/api/admin/captcha-config", // 验证码配置（登录页需要）
-]);
-
-// 去除尾斜杠，规范化路径
 const normalizePath = (path: string) => path.replace(/\/$/, "") || "/";
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	const url = new URL(context.request.url);
 	const pathname = normalizePath(url.pathname);
 
-	// 检查是否需要认证
-	const isAdminPage = pathname.startsWith("/admin/");
-	const isAdminApi = pathname.startsWith("/api/admin/");
-
-	if (!isAdminPage && !isAdminApi) {
-		const response = await next();
-		response.headers.set("X-Content-Type-Options", "nosniff");
-		response.headers.set("X-Frame-Options", "DENY");
-		const contentType = response.headers.get("Content-Type") || "";
-		if (contentType.includes("text/html")) {
-			const html = await response.text();
-			const hueStyle = `<style>:root{--hue:${siteConfig.themeColor.hue}}</style>`;
-			const injected = html.replace("</head>", `${hueStyle}</head>`);
-			return new Response(injected, {
-				status: response.status,
-				statusText: response.statusText,
-				headers: response.headers,
-			});
-		}
-		return response;
+	// spike:仅验证 Astro middleware → Hono 转发链路可行
+	if (pathname === "/api/__health") {
+		return apiApp.fetch(context.request);
 	}
-
-	// 白名单路径直接放行
-	if (PUBLIC_PATHS.has(pathname) || PUBLIC_API_PATHS.has(pathname)) {
-		const response = await next();
-		response.headers.set("X-Content-Type-Options", "nosniff");
-		response.headers.set("X-Frame-Options", "DENY");
-		return response;
-	}
-
-	// 验证 session
-	const token = getSessionToken(context.request);
-	const username = token ? validateSession(token) : null;
-
-	if (!username) {
-		// API 请求返回 401 JSON
-		if (isAdminApi) {
-			return new Response(JSON.stringify({ error: "Unauthorized" }), {
-				status: 401,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
-		// 页面请求重定向到登录页
-		return context.redirect("/admin/");
-	}
-
-	// 将用户名附加到 locals 供后续使用
-	context.locals.username = username;
 
 	const response = await next();
 	response.headers.set("X-Content-Type-Options", "nosniff");
 	response.headers.set("X-Frame-Options", "DENY");
+	const contentType = response.headers.get("Content-Type") || "";
+	if (contentType.includes("text/html")) {
+		const html = await response.text();
+		const hueStyle = `<style>:root{--hue:${siteConfig.themeColor.hue}}</style>`;
+		const injected = html.replace("</head>", `${hueStyle}</head>`);
+		return new Response(injected, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: response.headers,
+		});
+	}
 	return response;
 });
