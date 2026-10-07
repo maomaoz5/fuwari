@@ -3,6 +3,8 @@ import { ApiError, api } from "../api";
 import Captcha from "../components/Captcha.svelte";
 import { navigate } from "../router";
 
+let { onLogin }: { onLogin?: () => void } = $props();
+
 let username = $state("");
 let password = $state("");
 let token = $state("");
@@ -23,6 +25,7 @@ async function submit(e: SubmitEvent) {
 				captchaToken: token || undefined,
 			}),
 		});
+		onLogin?.();
 		navigate("#/posts");
 	} catch (err) {
 		if (err instanceof ApiError) {
