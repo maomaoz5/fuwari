@@ -84,7 +84,7 @@
     "@types/pg": "^8.20.0",
     "@types/sanitize-html": "^2.16.1",
     "vite": "^8.2.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@9.14.4"
 }
