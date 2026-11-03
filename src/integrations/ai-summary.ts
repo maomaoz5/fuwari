@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import type { AstroIntegration } from "astro";
+import matter from "gray-matter";
 import { loadEnv } from "vite";
 import { aiSummaryConfig } from "../config.ts";
 import { getApiKey, getApiKeyEnvName } from "../utils/ai-providers.ts";
@@ -8,37 +9,19 @@ import { generateAllSummaries } from "../utils/ai-summary.ts";
 import { ensureCacheDir } from "../utils/ai-summary-cache.ts";
 
 /**
- * Parse frontmatter from a markdown file's raw content.
- * Returns the frontmatter fields and the body content (without frontmatter).
+ * 解析文章 frontmatter 与正文。
+ *
+ * 必须与后台运行时（services/post-files.ts，用 gray-matter）保持一致：
+ * 缓存以正文内容的 hash 判重，任一侧解析方式不同都会导致「永远判不中、每次构建都重调 AI」。
+ * 早期这里用手写正则，遇到 CRLF 文件会匹配失败，导致 title 为空且正文混入 frontmatter。
  */
-function parseFrontmatter(raw: string): {
-	title: string;
-	draft: boolean;
-	content: string;
-} {
-	const fmRegex = /^---\n([\s\S]*?)\n---/;
-	const match = raw.match(fmRegex);
-
-	let title = "";
-	let draft = false;
-	let content = raw;
-
-	if (match) {
-		const fmBlock = match[1];
-		content = raw.slice(match[0].length).trim();
-
-		const titleMatch = fmBlock.match(/^title:\s*(.+)$/m);
-		if (titleMatch) {
-			title = titleMatch[1].trim().replace(/^["']|["']$/g, "");
-		}
-
-		const draftMatch = fmBlock.match(/^draft:\s*(true|false)/m);
-		if (draftMatch) {
-			draft = draftMatch[1] === "true";
-		}
-	}
-
-	return { title, draft, content };
+function parsePost(raw: string): { title: string; draft: boolean; content: string } {
+	const { data, content } = matter(raw);
+	return {
+		title: typeof data.title === "string" ? data.title : "",
+		draft: data.draft === true,
+		content,
+	};
 }
 
 export default function aiSummaryIntegration(): AstroIntegration {
@@ -82,7 +65,7 @@ export default function aiSummaryIntegration(): AstroIntegration {
 
 					for (const file of files) {
 						const raw = readFileSync(join(postsDir, file), "utf-8");
-						const { title, draft, content } = parseFrontmatter(raw);
+						const { title, draft, content } = parsePost(raw);
 
 						if (draft) {
 							continue;

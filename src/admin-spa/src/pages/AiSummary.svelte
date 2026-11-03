@@ -7,6 +7,7 @@ let loading = true;
 let error = "";
 let success = "";
 let deletingSlug = "";
+let regeneratingSlug = "";
 
 async function loadSummaries() {
 	loading = true;
@@ -36,15 +37,17 @@ async function deleteSummary(slug) {
 }
 
 async function regenerate(slug) {
+	regeneratingSlug = slug;
 	error = "";
 	try {
-		await api(`/api/admin/ai-summary/${slug}`, { method: "POST" });
-		error = "操作失败";
+		const result = await api(`/api/admin/ai-summary/${slug}`, { method: "POST" });
+		success = `已重新生成 ${slug} 的摘要（${result?.title ?? ""}）`;
+		setTimeout(() => (success = ""), 4000);
+		await loadSummaries();
 	} catch (e) {
-		error =
-			e instanceof ApiError && e.status === 501
-				? "重新生成功能暂未实现"
-				: "请求失败";
+		error = `生成失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
+	} finally {
+		regeneratingSlug = "";
 	}
 }
 
@@ -116,9 +119,10 @@ onMount(() => {
               <td class="px-4 py-3 text-right">
                 <button
                   onclick={() => regenerate(summary.slug)}
-                  class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition mr-2"
+                  disabled={regeneratingSlug === summary.slug}
+                  class="px-3 py-1 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition mr-2 disabled:opacity-50"
                 >
-                  重新生成
+                  {regeneratingSlug === summary.slug ? '生成中...' : '重新生成'}
                 </button>
                 <button
                   onclick={() => deleteSummary(summary.slug)}
