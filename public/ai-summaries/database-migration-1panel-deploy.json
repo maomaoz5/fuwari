@@ -1,6 +1,6 @@
 {
-  "title": "",
-  "summary": "该博客实现了 SQLite 与 PostgreSQL 的双数据库支持，通过统一的 `DbDriver` 接口和 `DB_TYPE` 环境变量在本地开发时默认使用零配置的 SQLite（`data/stats.db`），而在生产环境切换为通过 1Panel 安装的 PostgreSQL，只需配置 `DATABASE_URL`（注意密码中的特殊字符需 URL‑encode）即可无缝切换，业务代码无须改动。部署流程包括在 1Panel 中安装 PostgreSQL、创建数据库与用户、安装项目并通过 PM2 运行、配置 Nginx 反向代理，并可在 `.env` 中通过 `CREATE_DEFAULT_ADMIN`、`OPENROUTER_API_KEY` 等选项调节默认管理员创建、邮箱重置等功能。总体实现了开发便利、生产可靠、部署简化的完整方案。",
-  "generatedAt": "2026-08-04T07:52:27.812Z",
-  "contentHash": "22fc63dcb45f8ee28175b27e17cff3abc22b4321a5c1401b411d0291e81f1c1c"
+  "title": "博客数据库迁移：从 SQLite 到 PostgreSQL + 1Panel 部署指南",
+  "summary": "这篇文章介绍了如何通过抽象数据库驱动接口实现从 SQLite 到 PostgreSQL 的无缝切换。作者设计了一个 `DbDriver` 接口，分别实现了 SQLite（`better-sqlite3`）和 PostgreSQL（`pg`）驱动，并通过环境变量 `DB_TYPE` 实现一键切换，既保持了本地开发的零配置，也为生产环境提供了更可靠的多实例支持。文章详细介绍了 1Panel 上部署 PostgreSQL 的完整流程，从安装、创建数据库、配置环境变量，到项目构建、PM2 管理、Nginx 反向代理及域名配置，助力开发者轻松完成博客系统在生产环境中的迁移与运行。",
+  "generatedAt": "2026-11-02T16:07:14.740Z",
+  "contentHash": "cc31778724bb9d7d5a7a8305b66bbeae327f14fb0b69a49c827b7775e8832aaa"
 }

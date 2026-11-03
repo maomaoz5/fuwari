@@ -22,52 +22,66 @@ const MAX_RETRIES = 3;
 /** Base backoff delays in ms: 30s, 60s, 120s */
 const BACKOFF_DELAYS = [30_000, 60_000, 120_000];
 
+/**
+ * 空内容重试间隔。部分自由模型（如 OpenRouter 的 auto-router）会只返回
+ * reasoning、content 为 null，直接落盘会把缓存写成 null，必须重试并最终报错。
+ */
+const EMPTY_RESPONSE_DELAYS = [1_500, 3_000];
+
 async function fetchWithRetry(
 	url: string,
 	headers: Record<string, string>,
 	body: object,
 ): Promise<string> {
 	let lastError: Error | null = null;
+	let emptyRetries = 0;
 
 	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-		try {
-			const response = await fetch(url, {
-				method: "POST",
-				headers,
-				body: JSON.stringify(body),
-			});
+		const response = await fetch(url, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(body),
+		});
 
-			if (response.status === 429) {
-				if (attempt < MAX_RETRIES) {
-					const delay =
-						BACKOFF_DELAYS[attempt] ??
-						BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
-					console.warn(
-						`[ai-provider] Rate limited (429). Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})...`,
-					);
-					await new Promise((r) => setTimeout(r, delay));
-					continue;
-				}
-				throw new Error(`Rate limited after ${MAX_RETRIES} retries`);
+		if (response.status === 429) {
+			if (attempt < MAX_RETRIES) {
+				const delay =
+					BACKOFF_DELAYS[attempt] ??
+					BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
+				console.warn(
+					`[ai-provider] Rate limited (429). Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})...`,
+				);
+				await new Promise((r) => setTimeout(r, delay));
+				continue;
 			}
-
-			if (!response.ok) {
-				const errorText = await response.text();
-				throw new Error(`API error (${response.status}): ${errorText}`);
-			}
-
-			const data = (await response.json()) as {
-				choices: Array<{ message: { content: string } }>;
-			};
-			return data.choices[0].message.content;
-		} catch (err) {
-			lastError = err instanceof Error ? err : new Error(String(err));
-
-			// Don't retry non-429 errors
-			if (!lastError.message.includes("Rate limited")) {
-				throw lastError;
-			}
+			throw new Error(`Rate limited after ${MAX_RETRIES} retries`);
 		}
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			throw new Error(`API error (${response.status}): ${errorText}`);
+		}
+
+		const data = (await response.json()) as {
+			choices?: Array<{ message?: { content?: string | null } }>;
+		};
+		const content = data.choices?.[0]?.message?.content;
+
+		if (typeof content === "string" && content.trim() !== "") {
+			return content.trim();
+		}
+
+		lastError = new Error("Provider returned empty summary content");
+		if (emptyRetries < EMPTY_RESPONSE_DELAYS.length) {
+			const delay = EMPTY_RESPONSE_DELAYS[emptyRetries];
+			emptyRetries += 1;
+			console.warn(
+				`[ai-provider] Empty content, retrying in ${delay / 1000}s (${emptyRetries}/${EMPTY_RESPONSE_DELAYS.length})...`,
+			);
+			await new Promise((r) => setTimeout(r, delay));
+			continue;
+		}
+		throw lastError;
 	}
 
 	throw (

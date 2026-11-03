@@ -1,4 +1,3 @@
-import { loadEnv } from "vite";
 import type { AiSummaryConfig } from "../types/config.ts";
 import { getApiKey, getApiKeyEnvName, getProvider } from "./ai-providers.ts";
 import {
@@ -13,6 +12,23 @@ import {
 const REQUEST_DELAY_MS = 3000;
 
 /**
+ * 解析环境变量：`.env` 文件（构建期）与 process.env（运行期）合并，后者优先。
+ *
+ * 构建期 Astro 通过 vite 读取 `.env`；运行期（后台点击"重新生成"）没有 `.env`，
+ * key 来自进程环境（PM2 ecosystem / --env-file）。vite 不可用时静默退化为 process.env。
+ */
+async function resolveEnv(): Promise<Record<string, string | undefined>> {
+	let fileEnv: Record<string, string> = {};
+	try {
+		const { loadEnv } = await import("vite");
+		fileEnv = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
+	} catch {
+		fileEnv = {};
+	}
+	return { ...fileEnv, ...process.env };
+}
+
+/**
  * Call the AI provider API to generate a summary for a single blog post.
  */
 export async function generateSummary(
@@ -20,7 +36,7 @@ export async function generateSummary(
 	content: string,
 	config: AiSummaryConfig,
 ): Promise<string> {
-	const env = loadEnv(process.env.NODE_ENV ?? "production", process.cwd(), "");
+	const env = await resolveEnv();
 	const apiKey = getApiKey(config, env);
 	if (!apiKey) {
 		const envName = getApiKeyEnvName(config);
