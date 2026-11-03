@@ -1,9 +1,8 @@
 packages:
   - '.'
 
-overrides:
-  'glob@^10': '>=10.5.0'
-  katex: '>=0.18.2'
+# 注意：pnpm 9 不读取本文件的 overrides（实测 glob 仍停在 10.4.5），
+# 依赖覆盖统一写在 package.json 的 pnpm.overrides 中。
 
 patchedDependencies:
   astro: patches/astro.patch

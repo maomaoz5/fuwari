@@ -50,7 +50,7 @@
     "hastscript": "^9.0.1",
     "hono": "^4.13.13",
     "katex": "^0.18.11",
-    "markdown-it": "^15.0.2",
+    "markdown-it": "^15.0.3",
     "mdast-util-to-string": "^4.0.0",
     "overlayscrollbars": "^2.16.0",
     "pagefind": "^1.5.2",
@@ -66,14 +66,14 @@
     "remark-math": "^6.0.0",
     "remark-sectionize": "^2.1.0",
     "resend": "^6.32.1",
-    "sanitize-html": "^2.18.0",
+    "sanitize-html": "^2.18.1",
     "sharp": "^0.35.5",
     "stylus": "^0.64.0",
     "svelte": "^5.57.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "unist-util-visit": "^5.1.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@astrojs/ts-plugin": "^1.10.12",
@@ -86,7 +86,17 @@
     "@types/pg": "^8.23.1",
     "@types/sanitize-html": "^2.16.2",
     "vite": "^8.3.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
-  "packageManager": "pnpm@9.14.4"
+  "packageManager": "pnpm@9.14.4",
+  "pnpm": {
+    "overrides": {
+      "glob@^10": ">=10.5.0",
+      "katex": ">=0.18.2",
+      "serialize-javascript": ">=7.0.3",
+      "fast-uri": ">=3.1.9",
+      "postcss-selector-parser": ">=6.1.5",
+      "undici": ">=8.12.2"
+    }
+  }
 }
