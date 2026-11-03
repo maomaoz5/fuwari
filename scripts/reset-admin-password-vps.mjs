@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * VPS密码重置脚本（硬编码DATABASE_URL）
+ * VPS 管理员密码重置脚本
+ *
+ * 连接串从环境变量读取，不写死在代码里（本仓库是公开的）：
+ *   DATABASE_URL='postgresql://user:pass@localhost:5432/db' node scripts/reset-admin-password-vps.mjs
+ * 或者先 source 服务器上的 .env.production 再执行。
  */
 import crypto from "node:crypto";
 
@@ -39,7 +43,11 @@ function hashPassword(password, salt) {
 async function resetPostgres() {
   const { default: pg } = await import("pg");
 
-  const connectionString = "postgresql://fuwari_blog:KxM5pDn2Zx4P7RH4@localhost:5432/fuwari_blog";
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("❌ 缺少 DATABASE_URL 环境变量，拒绝执行。");
+    process.exit(1);
+  }
 
   const pool = new pg.Pool({ connectionString, max: 1 });
 
