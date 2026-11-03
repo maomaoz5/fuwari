@@ -522,6 +522,16 @@ nginx 三处静态 root 全部改指向该目录（`app-dist/client` 与 `app-di
 
 ## 12. 本地开发
 
+**包管理器**：pnpm 12.16.1（由 `package.json` 的 `packageManager` 字段锁定，corepack 会自动切换版本）。
+
+pnpm 12 的两条硬约束，改配置前务必知道：
+
+1. **配置只在 `pnpm-workspace.yaml`**：`package.json` 的 `pnpm` 字段已废弃（9.14 起告警），
+   `overrides` / `allowBuilds` 都写进 workspace 文件。
+2. **依赖默认不允许执行安装脚本**：原生模块必须列入 `allowBuilds`（映射形式，值为 `true`），
+   否则 `better-sqlite3`、`sharp`、`esbuild` 不会编译，表现为测试或构建莫名失败。
+   注意键名是 `allowBuilds`，旧的 `onlyBuiltDependencies` 在 12 里不再生效。
+
 ```bash
 pnpm dev          # Astro dev server（未在配置里指定端口，即默认 4321）
 pnpm dev:admin    # 后台 SPA，端口 5175
