@@ -50,8 +50,9 @@ export default defineConfig({
 			globalInstance: true,
 		}),
 		icon({
+			// 说明：曾尝试把下面各集合从 "*" 收窄为显式列表，实测构建耗时无变化
+			// （图标解析走 @iconify-json，不是构建瓶颈），且会让新增图标静默失效，故保留 "*"。
 			include: {
-				"preprocess: vitePreprocess(),": ["*"],
 				"fa6-brands": ["*"],
 				"fa6-regular": ["*"],
 				"fa6-solid": ["*"],
