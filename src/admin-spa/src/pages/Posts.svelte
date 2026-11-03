@@ -1,5 +1,5 @@
 <script>
-import { onMount } from "svelte";
+import { onDestroy, onMount } from "svelte";
 import { ApiError, api } from "../api";
 import { navigate } from "../router";
 
@@ -8,6 +8,11 @@ let loading = true;
 let error = "";
 let deleteTarget = null;
 let deleting = false;
+
+let rebuilding = false;
+let rebuildMsg = "";
+let rebuildTail = "";
+let pollTimer = null;
 
 async function loadPosts() {
 	loading = true;
@@ -24,6 +29,46 @@ async function loadPosts() {
 function newPost() {
 	navigate("#/posts/new");
 }
+
+async function startRebuild() {
+	rebuildMsg = "";
+	error = "";
+	try {
+		await api("/api/admin/rebuild", { method: "POST" });
+		rebuilding = true;
+		rebuildMsg = "重建已启动，约 30 秒后自动上线…";
+		pollRebuild();
+	} catch (e) {
+		if (e instanceof ApiError && e.status === 409) {
+			rebuilding = true;
+			rebuildMsg = "已有重建在执行，正在等待结果…";
+			pollRebuild();
+			return;
+		}
+		error = `触发重建失败: ${e instanceof ApiError ? e.message : "网络错误"}`;
+	}
+}
+
+async function pollRebuild() {
+	clearTimeout(pollTimer);
+	try {
+		const res = await api("/api/admin/rebuild");
+		rebuildTail = res.tail || "";
+		rebuilding = Boolean(res.running);
+		if (res.running) {
+			pollTimer = setTimeout(pollRebuild, 3000);
+			return;
+		}
+		rebuildMsg = rebuildTail.includes("重建完成")
+			? "✓ 已发布上线，刷新前台即可看到更新"
+			: "重建结束，请检查下方日志";
+	} catch {
+		rebuilding = false;
+		rebuildMsg = "无法获取重建状态";
+	}
+}
+
+onDestroy(() => clearTimeout(pollTimer));
 
 async function doDelete() {
 	if (!deleteTarget) return;
@@ -45,13 +90,32 @@ onMount(loadPosts);
 <div>
   <div class="flex items-center justify-between mb-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">文章管理</h2>
-    <button
-      onclick={newPost}
-      class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
-    >
-      + 新建文章
-    </button>
+    <div class="flex items-center gap-3">
+      <button
+        onclick={startRebuild}
+        disabled={rebuilding}
+        title="文章页是构建时生成的，改完需要重建才会在线上生效"
+        class="px-4 py-2 rounded-lg border border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition font-medium disabled:opacity-50"
+      >
+        {rebuilding ? "构建中…" : "构建并发布"}
+      </button>
+      <button
+        onclick={newPost}
+        class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
+      >
+        + 新建文章
+      </button>
+    </div>
   </div>
+
+  {#if rebuildMsg}
+    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+      <p class="text-blue-700 dark:text-blue-300 text-sm">{rebuildMsg}</p>
+      {#if rebuildTail}
+        <pre class="mt-2 text-xs text-blue-600/80 dark:text-blue-300/70 whitespace-pre-wrap max-h-32 overflow-auto">{rebuildTail.slice(-1200)}</pre>
+      {/if}
+    </div>
+  {/if}
 
   {#if error}
     <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">

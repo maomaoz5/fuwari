@@ -5,6 +5,7 @@ import { aiSummaryRoutes } from "./routes/ai-summary";
 import { authRoutes } from "./routes/auth";
 import { configRoutes } from "./routes/config";
 import { postsRoutes } from "./routes/posts";
+import { rebuildRoutes } from "./routes/rebuild";
 import { statsRoutes } from "./routes/stats";
 
 export type AppEnv = { Variables: { username: string } };
@@ -54,6 +55,7 @@ export function createServerApp(): Hono<AppEnv> {
 
 	app.route("/", authRoutes);
 	app.route("/", postsRoutes);
+	app.route("/", rebuildRoutes);
 	app.route("/", adminsRoutes);
 	app.route("/", configRoutes);
 	app.route("/", statsRoutes);
