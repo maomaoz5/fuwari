@@ -33,8 +33,19 @@ yarn.lock
 
 # screenshots and canvas
 screenshot-*.png
+screenshot_*.png
+/*.png
+PixPin_*.png
 *.canvas.status.json
 *.canvas.tsx
+review_diff.txt
+test-verify.mjs
+
+# 含明文口令的本地运维脚本，禁止入库
+reset-password-*.sh
+
+# 智能体工作区数据
+.workbuddy/
 
 # admin data
 data/config-overrides.json
