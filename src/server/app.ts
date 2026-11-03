@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { getDb } from "./db";
 import { adminsRoutes } from "./routes/admins";
 import { aiSummaryRoutes } from "./routes/ai-summary";
 import { authRoutes } from "./routes/auth";
@@ -28,6 +29,28 @@ export function createServerApp(): Hono<AppEnv> {
 	});
 
 	app.get("/__health", (c) => c.json({ ok: true, data: { status: "up" } }));
+
+	// 就绪探针：真正打一次数据库，库挂时返回 503（存活探针 __health 不做 IO）
+	app.get("/__ready", async (c) => {
+		const startedAt = Date.now();
+		try {
+			const { db, t } = await getDb();
+			await db.select({ id: t.admins.id }).from(t.admins).limit(1);
+			return c.json({
+				ok: true,
+				data: { status: "ready", db: "up", latencyMs: Date.now() - startedAt },
+			});
+		} catch (err) {
+			console.error("[ready] database check failed", err);
+			return c.json(
+				{
+					ok: false,
+					error: { code: "db_unavailable", message: "Database unavailable" },
+				},
+				503,
+			);
+		}
+	});
 
 	app.route("/", authRoutes);
 	app.route("/", postsRoutes);
