@@ -414,6 +414,45 @@ bash scripts/deploy-vps.sh --build   # 先 pnpm build 再发布
 > 2026-11-03 曾因脚本上传本地旧副本，把线上配置覆盖回 `provider: none`，
 > 表现为「后台开了 Turnstile，登录页却不显示验证框」。排查这类问题时先看这个文件。
 
+### 9.4 按需发布（后台一键重建）
+
+文章页是 `prerender`，后台改的是 md 文件，**改完不会自动上线**。为此服务器保留一份
+可构建的 git 克隆，后台点「构建并发布」即可重建并上线。
+
+```
+POST /api/admin/rebuild   → setsid 启动 /root/fuwari-build/rebuild.sh
+GET  /api/admin/rebuild   → { running, tail }（tail 为日志尾部 4KB）
+```
+
+脚本流程（约 30–60 秒）：
+
+1. `git fetch` + `reset --hard origin/main`（**失败/超时降级**：用现有版本继续，不阻断发布）
+2. 从 `/root/fuwari/src/content/posts` 同步文章到构建目录（`--delete` 镜像）
+3. 同步 `public/ai-summaries`（保留服务器上已生成的较新摘要）
+4. `pnpm build`
+5. 原子替换 `dist`（失败则保留原版本）
+6. `rsync` 到 nginx 镜像 + `chown 1panel:1panel`
+7. `pm2 restart`，写 `=== 重建完成 ===`
+
+限制与注意：
+
+- 限流 **3 次/15 分钟**，并发时返回 409（脚本内有 `flock`）
+- 脚本用 `setsid` 启动，否则它自己的 `pm2 restart` 会把脚本一起杀掉
+- 构建目录 `/root/fuwari-build` 约 700 MB（node_modules），服务器内存峰值约 1.5 G，靠 swap 兜底
+- **代码改动必须先 push**：构建目录构建的是 `origin/main`，服务器上没有源码
+- 服务器访问 GitHub 不稳定（偶发 `SSL_ERROR_SYSCALL`），已做超时降级
+
+> 本地 `scripts/deploy-vps.sh` 仍是主发布通道（改代码后走它）；
+> 后台「构建并发布」只适合改文章/配置这类内容变更。
+
+### 9.5 运维：备份与日志
+
+| 项 | 配置 |
+|----|------|
+| 数据库备份 | `cron 0 3 * * *` → `/root/fuwari-backups/backup.sh`，`pg_dump` + gzip，保留 7 天，目录 700 |
+| 备份校验 | 已做恢复演练：临时库恢复后 admins/page_views/article_views 数量一致 |
+| PM2 日志 | `pm2-logrotate` 3.0.0，单文件 10 MB，保留 7 份，压缩，每日轮转 |
+
 失败时上一版保留在 `/root/fuwari/dist.old`，脚本会打印回滚命令。
 
 > 为什么静态资源要单独镜像：`pagefind` 生成在 `dist/pagefind/`，与 `dist/client/` 平级，
