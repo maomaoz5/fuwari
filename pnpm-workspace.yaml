@@ -1,5 +1,9 @@
 packages:
   - '.'
 
+overrides:
+  'glob@^10': '>=10.5.0'
+  katex: '>=0.18.2'
+
 patchedDependencies:
   astro: patches/astro.patch
