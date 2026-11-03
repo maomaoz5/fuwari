@@ -88,15 +88,5 @@
     "vite": "^8.3.3",
     "vitest": "^4.1.12"
   },
-  "packageManager": "pnpm@9.14.4",
-  "pnpm": {
-    "overrides": {
-      "glob@^10": ">=10.5.0",
-      "katex": ">=0.18.2",
-      "serialize-javascript": ">=7.0.3",
-      "fast-uri": ">=3.1.9",
-      "postcss-selector-parser": ">=6.1.5",
-      "undici": ">=8.12.2"
-    }
-  }
+  "packageManager": "pnpm@12.16.1"
 }

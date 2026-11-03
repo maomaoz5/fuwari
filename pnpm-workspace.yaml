@@ -1,8 +1,24 @@
 packages:
   - '.'
 
-# 注意：pnpm 9 不读取本文件的 overrides（实测 glob 仍停在 10.4.5），
-# 依赖覆盖统一写在 package.json 的 pnpm.overrides 中。
+# pnpm 10+ 的配置统一放在此文件；package.json 的 pnpm 字段已废弃（9.14 起会告警）。
+overrides:
+  'glob@^10': '>=10.5.0'
+  katex: '>=0.18.2'
+  serialize-javascript: '>=7.0.3'
+  fast-uri: '>=3.1.9'
+  postcss-selector-parser: '>=6.1.5'
+  undici: '>=8.12.2'
 
-patchedDependencies:
-  astro: patches/astro.patch
+# pnpm 12 默认禁止依赖执行安装脚本，原生模块必须显式放行，
+# 否则 better-sqlite3 / sharp 不会编译，测试与构建都会失败。
+# 注意：pnpm 12 的配置键是 allowBuilds（旧名 onlyBuiltDependencies 已不作为生效项）。
+allowBuilds:
+  '@parcel/watcher': true
+  better-sqlite3: true
+  esbuild: true
+  sharp: true
+
+# astro 补丁已移除：原补丁只是把 dev server 启动超时从 30s 放宽到 90s，
+# 但 astro 7.3.6 重写了 dist/cli/dev/background.js（已无该逻辑与上下文），补丁无法应用。
+# 若再次遇到 astro dev 启动超时，用 `pnpm patch astro@<version>` 重新生成。
