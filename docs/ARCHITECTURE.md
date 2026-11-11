@@ -557,11 +557,54 @@ nginx 三处静态 root 全部改指向该目录（`app-dist/client` 与 `app-di
 | `CREATE_DEFAULT_ADMIN` | 否 | `true` 时生产环境也建 `admin/admin12345678` |
 | `POSTS_DIR` / `AI_SUMMARIES_DIR` / `CONFIG_OVERRIDES_PATH` | 否 | 覆盖默认路径（测试用） |
 
+### 11.1 生产服务器环境（2026-11-11 全量升级后）
+
+| 项 | 版本 | 备注 |
+|---|---|---|
+| 系统 | AlmaLinux 10.2 (Lavender Lion) | dnf，不是 apt |
+| 内核 | 6.12.0-211.74.2.el10_2 | 旧内核 211.69.1 / 211.67.1 保留可回滚 |
+| Node | v26.13.0 | 经 nvm 安装，`nvm alias default` 已指向它 |
+| npm / pnpm / pm2 | 11.20.0 / 12.18.0 / 7.1.2 | |
+| Docker Engine | 29.9.3 | 6 个容器全部 `restart=always` |
+
+**三处与升级相关的硬约束，改动前必须知道：**
+
+1. **PM2 的 systemd 单元写死了 Node 绝对路径**
+   `/etc/systemd/system/pm2-root.service` 的 `ExecStart` 是
+   `/root/.nvm/versions/node/v<版本>/lib/node_modules/pm2/bin/pm2 resurrect`。
+   升级 Node 后必须重新执行 `pm2 startup systemd -u root --hp /root`，
+   否则重启机器时 PM2 找不到二进制，**站点直接起不来**。
+   另外 `pm2 update` 有丢进程的风险（本次实测丢过 `fuwari-blog`），
+   升级后要立刻 `pm2 list` 核对，缺了就 `pm2 start ecosystem.config.cjs` 再 `pm2 save`。
+
+2. **`pm2 save` 不保存模块**
+   `dump.pm2` 里只有应用进程，`pm2-logrotate` 不在其中。
+   已在 root crontab 加了 `@reboot` 兜底（`boot-recover` 条目）重新拉起它。
+
+3. **服务端重建脚本必须自己补 PATH**
+   `pm2` 由 systemd 启动，默认 PATH 不含 nvm，`pnpm` 会找不到。
+   `/root/fuwari-build/rebuild.sh` 已用
+   `ls -d /root/.nvm/versions/node/v*/bin | sort -V | tail -1` 动态取最新版并前置到 PATH，
+   所以再升 Node 不需要改脚本。
+
+**运维任务**（服务器独立于代码仓库，重装系统后需重建）：
+
+| 任务 | 位置 | 说明 |
+|---|---|---|
+| 数据库备份 | `/root/fuwari-backups/backup.sh`，cron 每日 03:00 | `pg_dump \| gzip`，保留 7 天，目录 700 |
+| 日志轮转 | `pm2-logrotate` 3.0.0 | 单文件 10M / 保留 7 份 / 压缩 / 每日轮转 |
+| 后台一键重建 | `/root/fuwari-build/rebuild.sh` | 由 `POST /api/admin/rebuild` 触发 |
+| 升级留档 | `/root/upgrade-baseline/{before,pre-reboot,after}.txt` | 本次升级的前后快照 |
+
+> 1Panel 面板（v2.4.2 → v2.5.0）没有 CLI 升级命令，**只能在面板「设置 → 关于 → 检查更新」里升级**。
+> 不要用脚本替换 `/opt/1panel` 下的二进制：面板升级自带数据库迁移与备份，手工替换一旦迁移失败，面板会打不开（站点不受影响，但管理入口没了）。
+
+
 ---
 
 ## 12. 本地开发
 
-**包管理器**：pnpm 12.16.1（由 `package.json` 的 `packageManager` 字段锁定，corepack 会自动切换版本）。
+**包管理器**：pnpm 12.18.0（由 `package.json` 的 `packageManager` 字段锁定，corepack 会自动切换版本）。
 
 pnpm 12 的两条硬约束，改配置前务必知道：
 
