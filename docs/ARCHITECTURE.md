@@ -596,8 +596,27 @@ nginx 三处静态 root 全部改指向该目录（`app-dist/client` 与 `app-di
 | 后台一键重建 | `/root/fuwari-build/rebuild.sh` | 由 `POST /api/admin/rebuild` 触发 |
 | 升级留档 | `/root/upgrade-baseline/{before,pre-reboot,after}.txt` | 本次升级的前后快照 |
 
-> 1Panel 面板（v2.4.2 → v2.5.0）没有 CLI 升级命令，**只能在面板「设置 → 关于 → 检查更新」里升级**。
-> 不要用脚本替换 `/opt/1panel` 下的二进制：面板升级自带数据库迁移与备份，手工替换一旦迁移失败，面板会打不开（站点不受影响，但管理入口没了）。
+> **1Panel 的版本判断有两套数据源，别被 GitHub 误导。**
+>
+> - 面板「检查更新」读的是官方分发渠道：
+>   `https://resource.1panel.jp/upg/1panel/package/v2/stable/latest`
+>   （注意域名是 `1panel.jp`，不是 `fit2cloud.com`；后者是 v1 分支的渠道，会返回 `v1.10.34-lts`）
+> - GitHub `releases/latest` 是另一套数据，**新版本会先发 GitHub，stable 渠道要滞后若干天才同步**
+>
+> 2026-11-12 实测：GitHub 已有 `v2.5.0`（2026-11-11 08:51 发布），
+> 而 stable 渠道仍返回 `v2.4.2`。此时面板提示"已是最新"是**正确**的，
+> 不是 bug，也不是缓存问题——升级包还没推送到该渠道。
+>
+> 判断该不该升，看渠道接口，不看 GitHub：
+>
+> ```bash
+> curl -s https://resource.1panel.jp/upg/1panel/package/v2/stable/latest
+> ```
+>
+> 另外 1Panel 没有 CLI 升级命令（`1pctl update` 只是刷新系统信息），
+> 只能在面板「设置 → 关于 → 检查更新」里升级。
+> 不要手工替换二进制：面板升级自带数据库迁移与备份，
+> 手工替换一旦迁移失败，面板会打不开（站点不受影响，但管理入口没了）。
 
 
 ---
