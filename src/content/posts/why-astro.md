@@ -66,7 +66,7 @@ Astro 内置了对 Markdown 的全面支持，包括 frontmatter 解析、自动
 
 Astro 最实用的一点是它同时支持**静态输出**和**服务端渲染（SSR）**两种模式。纯内容站可以编译成静态文件丢到任意托管平台；而当我需要动态能力（后台管理、访问统计、评论、AI 摘要）时，可以开启 SSR / 混合模式，用内置的 Node 适配器把站点跑成一个 Node 服务。
 
-我的博客最初确实是纯静态部署，后来加上了自己的管理后台后切到了 SSR。目前用 Astro 7 的 Node standalone 适配器，部署在自建的 VPS 上：1Panel 管理 + PM2 守护进程 + OpenResty 反向代理 + Cloudflare CDN。虽然是自己运维，但 Astro 让"从静态平滑升级到动态"这件事几乎没有断层。
+我的博客最初确实是纯静态部署，后来加上了自己的管理后台后切到了 SSR。目前用 Astro 7 的 Node standalone 适配器，部署在自建的 VPS 上：HAProxy 3.4 统一入口（TLS 终止 + HTTP/3）+ Caddy 回源 + 宿主机原生 PostgreSQL + PM2 守护进程 + Cloudflare DNS。虽然是自己运维，但 Astro 让"从静态平滑升级到动态"这件事几乎没有断层。
 
 ## 一些不足
 

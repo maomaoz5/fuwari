@@ -55,7 +55,7 @@ export const navBarConfig: NavBarConfig = {
 };
 
 export const profileConfig: ProfileConfig = {
-	avatar: "https://image.cnctos.eu.org/web/avatar_square.png",
+	avatar: "/img/avatar_square.webp",
 	name: "猫猫",
 	bio: "一只喜欢写代码的猫猫，分享技术与生活的点点滴滴~",
 	links: [

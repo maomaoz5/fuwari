@@ -21,6 +21,17 @@ category: "部署运维"
 
 这篇文章就记录整个过程的思路和部署步骤。
 
+> **⚠️ 2026-11-12 更新：本文的部署部分已过时**
+>
+> 博客已完成一次架构迁移，旧方案中的以下环节不再适用：
+>
+> - 1Panel 面板已下线，改用系统包 + systemd 直接管理
+> - OpenResty 反向代理 → **HAProxy 3.4 LTS**（统一入口，TLS 终止 + HTTP/3）+ **Caddy**（回源）
+> - 1Panel 应用商店的 Docker 版 PostgreSQL → **宿主机原生 PostgreSQL 18**
+> - 面板内申请证书 → **acme.sh + Cloudflare DNS-01**，续期全自动
+>
+> 本文前半部分（数据库驱动层设计、双数据库切换、连接串 URL 编码、默认管理员等）依然有效；「1Panel 部署完整步骤」一章仅作历史记录保留。
+
 ## 架构设计：数据库驱动层
 
 ### 接口抽象
@@ -125,6 +136,9 @@ DATABASE_URL=postgresql://fuwari_user:my%23pass%40word@localhost:5432/fuwari_blo
 ```
 
 ## 1Panel 部署完整步骤
+
+> ⚠️ **本章内容已过时。** 下文以「1Panel 应用商店安装 PostgreSQL + Nginx 反向代理 + 面板申请证书」为前提，当前线上已改为 HAProxy + Caddy + 宿主机原生 PostgreSQL，证书由 acme.sh 自动续期。以下仅作历史记录。
+
 
 下面是在 1Panel 上从零部署的完整流程。
 

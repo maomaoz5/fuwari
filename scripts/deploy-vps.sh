@@ -12,7 +12,7 @@ set -euo pipefail
 
 HOST="${DEPLOY_HOST:-vps}"
 APP_DIR="/root/fuwari"
-MIRROR="/opt/1panel/1panel/www/sites/zidayo.com/app-dist"
+MIRROR="/srv/sites/zidayo.com/app-dist"
 PM2_NAME="fuwari-blog"
 SITE_URL="${SITE_URL:-https://www.zidayo.com}"
 
@@ -91,8 +91,8 @@ say "5/6 同步 nginx 静态镜像并重启"
 ssh "$HOST" "
 	set -e
 	rsync -a --delete '$APP_DIR/dist/' '$MIRROR/'
-	chown -R 1panel:1panel '$MIRROR'
-	pm2 start '$APP_DIR/ecosystem.config.cjs' --update-env >/dev/null
+	chmod -R a+rX '$MIRROR'
+	pm2 restart '$PM2_NAME' --update-env >/dev/null 2>&1 || pm2 start '$APP_DIR/ecosystem.config.cjs' --update-env >/dev/null
 	sleep 2
 	pm2 list | grep '$PM2_NAME'
 "
