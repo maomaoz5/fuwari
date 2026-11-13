@@ -48,7 +48,7 @@
     "drizzle-orm": "^0.45.3",
     "gray-matter": "^4.0.3",
     "hastscript": "^9.0.1",
-    "hono": "^4.13.13",
+    "hono": "^4.13.16",
     "katex": "^0.18.11",
     "markdown-it": "^15.0.3",
     "mdast-util-to-string": "^4.0.0",
