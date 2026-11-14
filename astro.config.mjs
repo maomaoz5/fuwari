@@ -60,6 +60,13 @@ export default defineConfig({
 		}),
 		expressiveCode({
 			themes: [expressiveCodeConfig.theme],
+			// HAProxy 配置没有现成的 shiki 语法，借用 nginx 的高亮（同为指令式配置），
+			// 避免每次构建都刷 "language could not be found" 警告
+			shiki: {
+				langAlias: {
+					haproxy: "nginx",
+				},
+			},
 			plugins: [
 				pluginCollapsibleSections(),
 				pluginLineNumbers(),

@@ -82,7 +82,7 @@ SQLite 模式是默认模式，**零配置即可使用**。
 
 项目根目录下的 `.env` 文件中确保以下配置：
 
-```env
+```ini
 DB_TYPE=sqlite
 ```
 
@@ -109,7 +109,7 @@ CREATE DATABASE fuwari_blog OWNER fuwari_user;
 
 在项目根目录创建或编辑 `.env` 文件：
 
-```env
+```ini
 DB_TYPE=postgres
 DATABASE_URL=postgresql://fuwari_user:your_password@localhost:5432/fuwari_blog
 ```
@@ -131,7 +131,7 @@ DATABASE_URL=postgresql://fuwari_user:your_password@localhost:5432/fuwari_blog
 
 举个例子，如果你的密码是 `my#pass@word`，那么连接字符串应该写成：
 
-```env
+```ini
 DATABASE_URL=postgresql://fuwari_user:my%23pass%40word@localhost:5432/fuwari_blog
 ```
 
@@ -193,7 +193,7 @@ cp .env.example .env
 
 编辑 `.env` 文件：
 
-```env
+```ini
 # 数据库配置
 DB_TYPE=postgres
 DATABASE_URL=postgresql://fuwari_user:your_secure_password@localhost:5432/fuwari_blog
@@ -267,7 +267,7 @@ server {
 
 完整的 `.env` 配置示例：
 
-```env
+```ini
 # 数据库类型：sqlite 或 postgres
 DB_TYPE=postgres
 
@@ -282,7 +282,7 @@ OPENROUTER_API_KEY=your-key-here
 
 如果你想在本地切回 SQLite 模式，只需要修改一个环境变量：
 
-```env
+```ini
 DB_TYPE=sqlite
 ```
 
@@ -309,7 +309,7 @@ DB_TYPE=sqlite
 
 通过 `.env` 中的 `CREATE_DEFAULT_ADMIN` 配置项控制是否自动创建默认管理员账号：
 
-```env
+```ini
 # 设置为 true 时，首次启动自动创建默认管理员（默认值：true）
 CREATE_DEFAULT_ADMIN=true
 ```

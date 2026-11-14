@@ -1,6 +1,6 @@
 {
   "title": "博客数据库迁移：从 SQLite 到 PostgreSQL + 1Panel 部署指南",
-  "summary": "本文记录了作者如何通过抽象 `DbDriver` 接口实现从 SQLite 到 PostgreSQL 的平滑切换，从而在开发（SQLite）和生产（PostgreSQL）环境中兼顾零配置和可靠性。项目通过环境变量 `DB_TYPE` 自动加载不同的驱动程序（`db-sqlite.ts` 或 `db-postgres.ts`），上层业务代码无需修改即可支持双数据库模式。迁移步骤包括安装 PostgreSQL、创建专属数据库用户、使用 URL 编码保护密码安全，并在 `.env` 中设置 `DATABASE_URL` 和 `DB_TYPE=postgres`；本地开发时则保留默认的 `DB_TYPE=sqlite`，无需额外配置。部署方面，作者使用了 1Panel 面板、PM2 进程管理、Nginx 反向代理及 Let's Encrypt 证书，但文章已注明当前架构已更新（HAProxy + Caddy + 宿主机 PostgreSQL + acme.sh），仅供历史参考。",
-  "generatedAt": "2026-11-13T10:09:56.950Z",
-  "contentHash": "d87d26033a1392a0d2dc3f508852f1d9560a59d4f6e1392dbbb6328a4117b96f"
+  "summary": "本文介绍了个人博客最初使用 SQLite 的优势，但在正式上线时并发、安全和备份等限制迫使作者采用双数据库方案。通过抽象出 `DbDriver` 接口实现 SQLite 和 PostgreSQL 驱动，并借助 `DB_TYPE` 环境变量实现无缝切换，开发时保持零配置，生产环境则使用更健壮的 PostgreSQL。文章详细介绍了 PostgreSQL 的安装、数据库创建、连接字符串 URL 编码以及 1Panel（历史）部署流程，同时强调了安全事项（密码重置、数据迁移等）。这种设计使上层业务代码无需改动，既灵活又易于维护。",
+  "generatedAt": "2026-11-14T08:11:59.211Z",
+  "contentHash": "cf29e56e294a0fcaf8dc8cb7810aaecfe987082bcdc1117a26838dc77cec1ffe"
 }

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { ApiError, api } from "../api";
+import AuthBackground from "../components/AuthBackground.svelte";
 import Captcha from "../components/Captcha.svelte";
 import { navigate } from "../router";
 
@@ -43,10 +44,10 @@ async function submit(e: SubmitEvent) {
 }
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
+<AuthBackground>
 	<form
 		onsubmit={submit}
-		class="w-full max-w-sm bg-white dark:bg-gray-800 rounded-lg shadow p-8 space-y-4"
+		class="w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-2xl ring-1 ring-black/5 p-8 space-y-4"
 	>
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-white text-center">管理登录</h1>
 
@@ -91,4 +92,4 @@ async function submit(e: SubmitEvent) {
 			>
 		</p>
 	</form>
-</div>
+</AuthBackground>
