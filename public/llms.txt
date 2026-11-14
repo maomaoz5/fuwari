@@ -4,11 +4,23 @@
 
 ## 关于
 
-- 这是一个个人技术博客，主要分享编程经验、技术心得和生活日常
-- 使用 Astro 框架搭建
+- 个人技术博客，主要记录编程实践、部署运维与日常折腾
+- 技术栈：Astro 构建，HAProxy + Caddy 承载，PostgreSQL 存储
+- 站点地址：https://zidayo.com
+- 内容以中文为主，代码与技术细节尽量保持可复现
+
+## 文章
+
+- [一次真实的架构迁移：把博客从 1Panel 搬到 HAProxy + Caddy](https://zidayo.com/posts/haproxy-caddy-migration/)（2026-11-12 · 部署运维）：从 1Panel + OpenResty 迁移到 HAProxy 3.4 LTS + Caddy + 宿主机原生 PostgreSQL，记录完整过程、踩到的十几个坑，以及证书自动化、备份与防护的收尾。
+- [博客数据库迁移：从 SQLite 到 PostgreSQL + 1Panel 部署指南](https://zidayo.com/posts/database-migration-1panel-deploy/)（2026-07-30 · 部署运维）：记录博客后台管理系统的数据库架构升级，实现 SQLite 和 PostgreSQL 双数据库支持，以及在 1Panel 上的完整部署流程。
+- [用 Biome 统一你的前端工具链](https://zidayo.com/posts/biome-unified-toolchain/)（2025-09-12 · 工具推荐）：介绍 Biome 这个新兴的前端工具，看它如何用一个工具替代 ESLint + Prettier 的组合。
+- [编程三年，我学到的不只是技术](https://zidayo.com/posts/three-years-of-coding/)（2025-07-08 · 随笔）：回顾三年的编程经历，分享那些课本和教程里学不到的经验与感悟。
+- [为什么我选择 Astro 构建个人博客](https://zidayo.com/posts/why-astro/)（2025-05-20 · 技术选型）：在尝试了多种静态站点生成器之后，我最终选择了 Astro。这篇文章分享我的选型思路和 Astro 的核心优势。
+- [五个提升效率的前端开发技巧](https://zidayo.com/posts/five-frontend-tips/)（2025-03-15 · 前端开发）：分享五个在日常前端开发中非常实用的技巧，帮助你写出更简洁、更高效的代码。
 
 ## 链接
 
 - [首页](https://zidayo.com/)
 - [归档](https://zidayo.com/archive/)
 - [关于](https://zidayo.com/about/)
+- [RSS](https://zidayo.com/rss.xml)

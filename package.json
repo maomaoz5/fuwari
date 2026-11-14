@@ -8,7 +8,7 @@
     "dev:admin": "vite --config src/admin-spa/vite.config.ts",
     "build:admin": "vite build --config src/admin-spa/vite.config.ts",
     "check": "tsc --noEmit",
-    "build": "pnpm build:admin && astro build && pagefind --site dist",
+    "build": "node scripts/gen-site-meta.mjs && pnpm build:admin && astro build && pagefind --site dist",
     "build:site": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "deploy": "bash scripts/deploy-vps.sh",
