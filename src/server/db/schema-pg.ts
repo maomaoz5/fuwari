@@ -56,3 +56,13 @@ export const articleViews = pgTable("article_views", {
 		.notNull()
 		.default(sql`NOW()`),
 });
+
+/** 状态页历史：每分钟一条，记录数据库可用性与耗时 */
+export const statusChecks = pgTable("status_checks", {
+	id: serial("id").primaryKey(),
+	checkedAt: timestamp("checked_at", { withTimezone: true, mode: "string" })
+		.notNull()
+		.default(sql`NOW()`),
+	dbOk: integer("db_ok").notNull().default(1),
+	dbMs: integer("db_ms").notNull().default(0),
+});

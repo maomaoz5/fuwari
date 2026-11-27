@@ -7,6 +7,7 @@ import { configRoutes } from "./routes/config";
 import { postsRoutes } from "./routes/posts";
 import { rebuildRoutes } from "./routes/rebuild";
 import { statsRoutes } from "./routes/stats";
+import { statusRoutes } from "./routes/status";
 
 export type AppEnv = { Variables: { username: string } };
 
@@ -18,6 +19,9 @@ async function ensureInit() {
 	const { ensureDefaultAdmin } = await import("./services/admins-repo");
 	await getDb();
 	await ensureDefaultAdmin();
+	// 状态采集器：首次请求时启动，之后每分钟落一条记录
+	const { startStatusMonitor } = await import("./services/status-monitor");
+	startStatusMonitor();
 }
 
 export function createServerApp(): Hono<AppEnv> {
@@ -59,6 +63,7 @@ export function createServerApp(): Hono<AppEnv> {
 	app.route("/", adminsRoutes);
 	app.route("/", configRoutes);
 	app.route("/", statsRoutes);
+	app.route("/", statusRoutes);
 	app.route("/", aiSummaryRoutes);
 
 	root.onError((err, c) => {

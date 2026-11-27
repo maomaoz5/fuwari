@@ -72,6 +72,13 @@ const SQLITE_DDL = [
 	"CREATE INDEX IF NOT EXISTS idx_page_views_visited_at ON page_views(visited_at)",
 	"CREATE INDEX IF NOT EXISTS idx_article_views_visited_at ON article_views(visited_at)",
 	"CREATE INDEX IF NOT EXISTS idx_article_views_slug ON article_views(slug)",
+	`CREATE TABLE IF NOT EXISTS status_checks (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		checked_at TEXT NOT NULL DEFAULT (datetime('now')),
+		db_ok INTEGER NOT NULL DEFAULT 1,
+		db_ms INTEGER NOT NULL DEFAULT 0
+	)`,
+	"CREATE INDEX IF NOT EXISTS idx_status_checks_checked_at ON status_checks(checked_at)",
 ];
 
 const PG_DDL = [
@@ -114,6 +121,13 @@ const PG_DDL = [
 	`ALTER TABLE admins ADD COLUMN IF NOT EXISTS email TEXT DEFAULT ''`,
 	`ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token TEXT DEFAULT ''`,
 	"ALTER TABLE admins ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMPTZ DEFAULT NULL",
+	`CREATE TABLE IF NOT EXISTS status_checks (
+		id SERIAL PRIMARY KEY,
+		checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+		db_ok INTEGER NOT NULL DEFAULT 1,
+		db_ms INTEGER NOT NULL DEFAULT 0
+	)`,
+	"CREATE INDEX IF NOT EXISTS idx_status_checks_checked_at ON status_checks(checked_at)",
 ];
 
 export async function ensureSchema(db: Db): Promise<void> {

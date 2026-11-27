@@ -38,3 +38,11 @@ export const articleViews = sqliteTable("article_views", {
 	slug: text("slug").notNull(),
 	visitedAt: text("visited_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+/** 状态页历史：每分钟一条，记录数据库可用性与耗时 */
+export const statusChecks = sqliteTable("status_checks", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	checkedAt: text("checked_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+	dbOk: integer("db_ok").notNull().default(1),
+	dbMs: integer("db_ms").notNull().default(0),
+});
