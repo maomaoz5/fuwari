@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# 发布脚本：本地构建 → 上传 → 同步 nginx 静态镜像 → 重启 → 回归验证
+# 发布脚本：本地构建 → 上传 → 同步静态镜像（Caddy 静态根目录）→ 重启 → 回归验证
 #
 # 用法：
 #   bash scripts/deploy-vps.sh            # 用现有 dist 发布
 #   bash scripts/deploy-vps.sh --build    # 先 pnpm build 再发布
 #
 # 依赖：ssh（已配置 Host vps）、tar、pnpm（仅 --build 时需要）
-# 说明：本地无需 rsync；服务器端用 rsync 把 dist 同步到 nginx 静态镜像目录。
+# 说明：本地无需 rsync；服务器端用 rsync 把 dist 同步到 Caddy 的静态根目录
+#       （/srv/sites/zidayo.com/app-dist，由 Caddy 的 file_server 直接对外）。
+#       线上入口链路：HAProxy(443/h3) → Caddy(8443) → Node(4321)。
 
 set -euo pipefail
 
@@ -104,7 +106,7 @@ tar czf - -C public ai-summaries | ssh "$HOST" "
 echo "  文章与摘要已同步（默认不覆盖线上同名的较新文件）"
 echo "  站点配置 data/config-overrides.json 归服务器所有，本次不上传"
 
-say "5/6 同步 nginx 静态镜像并重启"
+say "5/6 同步静态镜像（Caddy 根目录）并重启"
 ssh "$HOST" "
 	set -e
 	rsync -a --delete '$APP_DIR/dist/' '$MIRROR/'
