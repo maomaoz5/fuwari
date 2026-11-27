@@ -1,0 +1,218 @@
+---
+export const prerender = true;
+
+import MainGridLayout from "../layouts/MainGridLayout.astro";
+import { siteConfig } from "../config";
+
+// 文案内联：避免为两个词去改 10 个语言文件
+const zh = siteConfig.lang.toLowerCase().startsWith("zh");
+const t = {
+	title: zh ? "站点状态" : "Status",
+	desc: zh
+		? "页面加载后自动检测站点与应用服务的可用性，每 30 秒刷新一次。"
+		: "Availability of the site and application services, refreshed every 30 seconds.",
+	refresh: zh ? "重新检测" : "Refresh",
+	checking: zh ? "检测中…" : "Checking…",
+	webLabel: zh ? "站点页面" : "Web page",
+	webNote: zh ? "你正在浏览的页面，已正常渲染" : "This page rendered successfully",
+	healthLabel: zh ? "API 存活" : "API liveness",
+	healthNote: zh ? "进程存活探针，不访问数据库" : "Process liveness, no database access",
+	readyLabel: zh ? "数据库就绪" : "Database readiness",
+	readyNote: zh ? "真实查询一次数据库后返回" : "Issues a real database query",
+	allOk: zh ? "所有服务正常" : "All systems operational",
+	allDown: zh ? "服务不可用" : "Major outage",
+	okText: zh ? "正常" : "Up",
+	downText: zh ? "异常" : "Down",
+	lastChecked: zh ? "最后检查" : "Last checked",
+	partialFmt: zh ? "部分服务异常" : "Partial outage",
+};
+
+// 复用现有探针：/api/__health 与 /api/__ready（见 src/server/app.ts）
+const checks = [
+	{ id: "web", label: t.webLabel, note: t.webNote, url: null },
+	{ id: "health", label: t.healthLabel, note: t.healthNote, url: "/api/__health" },
+	{ id: "ready", label: t.readyLabel, note: t.readyNote, url: "/api/__ready" },
+];
+---
+
+<MainGridLayout title={t.title} description={t.desc}>
+	<div class="flex w-full rounded-[var(--radius-large)] overflow-hidden relative min-h-32">
+		<div class="card-base z-10 px-9 py-6 relative w-full">
+			<h1 class="text-2xl font-bold mb-2">{t.title}</h1>
+			<p class="text-50 text-sm mb-6">{t.desc}</p>
+
+			<div
+				id="status-summary"
+				class="flex items-center gap-2.5 rounded-xl px-4 py-3 mb-5 text-sm transition-all"
+				style="background:color-mix(in oklab, var(--card-bg) 88%, #9ca3af 12%)"
+				aria-live="polite"
+			>
+				<span
+					id="summary-dot"
+					class="inline-block w-2.5 h-2.5 rounded-full"
+					style="background:#9ca3af"></span>
+				<span id="summary-text" class="text-90 font-medium">{t.checking}</span>
+			</div>
+
+			<ul class="space-y-3">
+				{
+					checks.map((c) => (
+						<li
+							class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-xl border px-4 py-3"
+							style="border-color:var(--line-divider)"
+							data-check={c.id}
+							data-url={c.url ?? ""}
+						>
+							<div class="min-w-0">
+								<div class="text-90 font-medium truncate">{c.label}</div>
+								<div class="text-30 text-xs mt-0.5 truncate">{c.note}</div>
+							</div>
+							<div class="flex items-center gap-3 shrink-0 text-sm">
+								<span class="text-30 text-xs" data-latency></span>
+								<span
+									class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs"
+									style="background:color-mix(in oklab, var(--card-bg) 85%, #9ca3af 15%)"
+									data-badge
+								>
+									<span class="inline-block w-1.5 h-1.5 rounded-full" style="background:#9ca3af" data-dot></span>
+									<span data-state>{t.checking}</span>
+								</span>
+							</div>
+						</li>
+					))
+				}
+			</ul>
+
+			<div class="mt-6 flex items-center justify-between gap-4 flex-wrap">
+				<span id="last-updated" class="text-30 text-xs">{t.lastChecked} —</span>
+				<button
+					id="refresh-btn"
+					type="button"
+					class="btn-plain rounded-lg px-3.5 py-1.5 text-sm transition-all"
+				>
+					{t.refresh}
+				</button>
+			</div>
+		</div>
+	</div>
+</MainGridLayout>
+
+<script type="application/json" id="status-i18n" set:html={JSON.stringify({
+	ok: t.okText,
+	down: t.downText,
+	allOk: t.allOk,
+	partial: t.partial,
+	allDown: t.allDown,
+	lastChecked: t.lastChecked,
+	partialFmt: t.partialFmt,
+})} />
+
+<script>
+	type Probe = { ok: boolean; ms: number; code: number };
+
+	const COLORS = { ok: "#16a34a", warn: "#d97706", down: "#dc2626", idle: "#9ca3af" };
+
+	const i18nEl = document.getElementById("status-i18n");
+	const L = JSON.parse(i18nEl?.textContent ?? "{}") as Record<string, string>;
+	const txt = (k: string, fallback: string) => L[k] ?? fallback;
+
+	const rows = Array.from(
+		document.querySelectorAll<HTMLElement>("[data-check]"),
+	);
+	const summaryDot = document.getElementById("summary-dot");
+	const summaryText = document.getElementById("summary-text");
+	const lastUpdated = document.getElementById("last-updated");
+	const refreshBtn = document.getElementById("refresh-btn");
+
+	const setBadge = (row: HTMLElement, state: "ok" | "down" | "idle", text: string) => {
+		const dot = row.querySelector<HTMLElement>("[data-dot]");
+		const label = row.querySelector<HTMLElement>("[data-state]");
+		const badge = row.querySelector<HTMLElement>("[data-badge]");
+		const color = COLORS[state];
+		if (dot) dot.style.background = color;
+		if (badge) {
+			badge.style.background = `color-mix(in oklab, var(--card-bg) 85%, ${color} 15%)`;
+			badge.style.color = color;
+		}
+		if (label) label.textContent = text;
+	};
+
+	const probe = async (url: string): Promise<Probe> => {
+		const start = performance.now();
+		try {
+			const res = await fetch(url, { cache: "no-store", headers: { accept: "application/json" } });
+			return { ok: res.ok, ms: Math.round(performance.now() - start), code: res.status };
+		} catch {
+			return { ok: false, ms: Math.round(performance.now() - start), code: 0 };
+		}
+	};
+
+	let running = false;
+
+	const run = async () => {
+		if (running) return;
+		running = true;
+		if (refreshBtn) refreshBtn.setAttribute("disabled", "true");
+
+		const results = await Promise.all(
+			rows.map(async (row) => {
+				const url = row.dataset.url ?? "";
+				const latency = row.querySelector<HTMLElement>("[data-latency]");
+
+				// 站点页面本身：能执行到这里就说明已正常渲染
+				if (!url) {
+					setBadge(row, "ok", txt("ok", "正常"));
+					if (latency) latency.textContent = "";
+					return true;
+				}
+
+				setBadge(row, "idle", "…");
+				const r = await probe(url);
+				setBadge(
+					row,
+					r.ok ? "ok" : "down",
+					r.ok
+						? `${txt("ok", "正常")} · ${r.code}`
+						: `${txt("down", "异常")} · ${r.code || "ERR"}`,
+				);
+				if (latency) latency.textContent = `${r.ms} ms`;
+				return r.ok;
+			}),
+		);
+
+		const okCount = results.filter(Boolean).length;
+		const all = okCount === results.length;
+		const none = okCount === 0;
+
+		if (summaryDot) summaryDot.style.background = all ? COLORS.ok : none ? COLORS.down : COLORS.warn;
+		if (summaryText) {
+			summaryText.textContent = all
+				? txt("allOk", "所有服务正常")
+				: none
+					? txt("allDown", "服务不可用")
+					: `${txt("partialFmt", "部分服务异常")}（${okCount}/${results.length}）`;
+			summaryText.style.color = all ? COLORS.ok : none ? COLORS.down : COLORS.warn;
+		}
+		if (lastUpdated) {
+			lastUpdated.textContent = `${txt("lastChecked", "最后检查")} ${new Date().toLocaleTimeString()}`;
+		}
+
+		if (refreshBtn) refreshBtn.removeAttribute("disabled");
+		running = false;
+	};
+
+	refreshBtn?.addEventListener("click", () => void run());
+
+	void run();
+
+	// 每 30 秒自动刷新，页面隐藏时跳过，避免后台无意义请求
+	const timer = window.setInterval(() => {
+		if (document.visibilityState === "visible") void run();
+	}, 30_000);
+
+	document.addEventListener("visibilitychange", () => {
+		if (document.visibilityState === "visible") void run();
+	});
+
+	window.addEventListener("pagehide", () => window.clearInterval(timer), { once: true });
+</script>
