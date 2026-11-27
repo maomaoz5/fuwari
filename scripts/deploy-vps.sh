@@ -44,6 +44,18 @@ fi
 
 [[ -f dist/server/entry.mjs ]] || die "dist/server/entry.mjs 不存在，请先 pnpm build 或加 --build"
 
+# 构建标识：以后判断"线上跑的是哪次构建"直接看 dist/BUILD_INFO，
+# 不用再靠文件大小或 mtime 猜。
+say "1.5/6 写入构建标识"
+{
+	echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+	echo "commit=$(git rev-parse --short HEAD 2>/dev/null || echo nogit)"
+	echo "dirty_files=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"
+	echo "builder=$(hostname 2>/dev/null || echo unknown)"
+	echo "node=$(node -v 2>/dev/null || echo unknown)"
+} > dist/BUILD_INFO
+cat dist/BUILD_INFO
+
 say "2/6 检查远端连通性"
 ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST" "test -d '$APP_DIR'" \
 	|| die "无法通过 ssh 连接到 $HOST 或 $APP_DIR 不存在"
@@ -58,6 +70,10 @@ tar czf - -C dist . | ssh "$HOST" "
 	rm -rf '$APP_DIR/dist.old'
 	mv '$APP_DIR/dist' '$APP_DIR/dist.old'
 	mv '$APP_DIR/dist.new' '$APP_DIR/dist'
+	# tar 保留了本机（Windows）的 UID，服务器上不存在该用户，会显示为 UNKNOWN。
+	# 尽管功能不受影响，但违反最小权限原则，这里统一归位。
+	chown -R root:root '$APP_DIR/dist'
+	chmod -R a+rX '$APP_DIR/dist'
 "
 echo "  dist 已替换"
 
@@ -75,6 +91,7 @@ tar czf - -C src/content posts | ssh "$HOST" "
 	rm -rf /tmp/fuwari-posts && mkdir -p /tmp/fuwari-posts
 	tar xzf - -C /tmp/fuwari-posts
 	rsync -a $RSYNC_MODE /tmp/fuwari-posts/posts/ '$APP_DIR/src/content/posts/'
+	chown -R root:root '$APP_DIR/src/content/posts'
 	rm -rf /tmp/fuwari-posts
 "
 tar czf - -C public ai-summaries | ssh "$HOST" "
@@ -91,6 +108,7 @@ say "5/6 同步 nginx 静态镜像并重启"
 ssh "$HOST" "
 	set -e
 	rsync -a --delete '$APP_DIR/dist/' '$MIRROR/'
+	chown -R root:root '$MIRROR'
 	chmod -R a+rX '$MIRROR'
 	pm2 restart '$PM2_NAME' --update-env >/dev/null 2>&1 || pm2 start '$APP_DIR/ecosystem.config.cjs' --update-env >/dev/null
 	sleep 2
