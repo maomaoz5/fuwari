@@ -19,7 +19,7 @@ const PUBLIC_DIR = path.join(ROOT, "public");
 const SITE = "https://zidayo.com";
 const TITLE = "猫猫的blog";
 const TAGLINE = "记录生活与代码的日常";
-const CONTACT = "mailto:maomaoz5@gmail.com";
+const CONTACT = "mailto:postmaster@maomaoz.org";
 
 function parseFrontmatter(raw) {
 	const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
