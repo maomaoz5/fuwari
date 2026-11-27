@@ -57,3 +57,6 @@ logs/
 *.error.log
 *.out.log
 public/admin/
+
+# 构建时自动生成（Expires 每次顺延，避免无意义 diff）
+public/.well-known/security.txt
