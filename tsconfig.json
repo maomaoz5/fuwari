@@ -1,19 +1,22 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "compilerOptions": {
-    "strictNullChecks": true,
-    "allowJs": false,
-    "declaration": true,
-    "paths": {
-      "@components/*": ["./src/components/*"],
-      "@assets/*": ["./src/assets/*"],
-      "@constants/*": ["./src/constants/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@i18n/*": ["./src/i18n/*"],
-      "@layouts/*": ["./src/layouts/*"],
-      "@server/*": ["./src/server/*"],
-      "@/*": ["./src/*"]
-    }
-  },
-  "include": ["src/**/*"]
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		// strict 已由 astro/tsconfigs/strict 提供（含 strictNullChecks），此处只保留差异项
+		"allowJs": false,
+		// 供 npm run type-check 的 --isolatedDeclarations 使用；
+		// 代价是推断过深的类型会触发 TS7056，遇到时显式标注返回类型即可
+		"declaration": true,
+		"paths": {
+			"@components/*": ["./src/components/*"],
+			"@assets/*": ["./src/assets/*"],
+			"@constants/*": ["./src/constants/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@i18n/*": ["./src/i18n/*"],
+			"@layouts/*": ["./src/layouts/*"],
+			"@server/*": ["./src/server/*"],
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": ["src/**/*"],
+	"exclude": ["dist", "node_modules"]
 }
