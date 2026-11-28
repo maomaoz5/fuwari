@@ -27,7 +27,7 @@ category: "部署运维"
 >
 > - 1Panel 面板已下线，改用系统包 + systemd 直接管理
 > - OpenResty 反向代理 → **HAProxy 3.4 LTS**（统一入口，TLS 终止 + HTTP/3）+ **Caddy**（回源）
-> - 1Panel 应用商店的 Docker 版 PostgreSQL → **宿主机原生 PostgreSQL 18**
+> - 1Panel 应用商店的 Docker 版 PostgreSQL → **宿主机原生 PostgreSQL（迁移时 18，现为 19.0）**
 > - 面板内申请证书 → **acme.sh + Cloudflare DNS-01**，续期全自动
 >
 > 本文前半部分（数据库驱动层设计、双数据库切换、连接串 URL 编码、默认管理员等）依然有效；「1Panel 部署完整步骤」一章仅作历史记录保留。

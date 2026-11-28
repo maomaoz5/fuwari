@@ -15,7 +15,7 @@ category: "部署运维"
 
 这套博客跑在 1Panel 上已经小半年：OpenResty 做反代、Docker 版 PostgreSQL 存数据、面板点点鼠标就能装应用、申请证书。舒服是真舒服，问题也是真问题。
 
-转折点是某天我想确认证书什么时候到期，翻了半天才发现：1Panel 里的自动续期记录写着 `auto_renew: 1`，但底下躺着一行报错——`alicloud: zone zidayo.com not found in AliDNS`。域名早就迁到 Cloudflare 了，续期链路断了快两个月。而这张证书带着 `HSTS preload`，一旦过期，访客连"继续访问"的按钮都点不了。
+转折点是某天我想确认证书什么时候到期，翻了半天才发现：1Panel 里的自动续期记录写着 `auto_renew: 1`，但底下躺着一行报错——`alicloud: zone example.com not found in AliDNS`。域名早就迁到 Cloudflare 了，续期链路断了快两个月。而这张证书带着 `HSTS preload`，一旦过期，访客连"继续访问"的按钮都点不了。
 
 那一刻我意识到：**面板把太多东西藏起来了，藏到出问题时你连它在哪都不知道。**
 
@@ -26,8 +26,8 @@ category: "部署运维"
 ```
 Internet
   └ HAProxy 3.4 LTS（80/443 tcp+udp，TLS 终止 + HTTP/3）
-      ├ zidayo.com      → Caddy :8443（HTTPS 回源）→ Node :4321
-      ├ docs.zidayo.com → Caddy :8443（静态）
+      ├ example.com      → Caddy :8443（HTTPS 回源）→ Node :4321
+      ├ docs.example.com → Caddy :8443（静态）
       └ monitor         → :25774
 
 数据层（全部宿主机原生）
@@ -243,3 +243,19 @@ rclone delete --min-age 14d --include 'mysite-*.enc' r2:bucket/path/
 面板把复杂度藏起来，这是它的价值；但当复杂度藏到你自己都说不清的时候，它就变成了负债。
 
 自建不等于更专业，只是把"信任"从别人手里拿回了自己手上——顺带，也把责任拿回来了。
+
+## 补记（2026-11-28）
+
+迁移半年后回头看，有两处需要补上，否则这篇文章会误导后来的人。
+
+**数据库已升到 PostgreSQL 19.0**，仍是宿主机原生、仍占 5432，文中写的 18.6 是迁移当时的版本。
+
+升级时撞到一个 19 的变化：`SHOW lc_collate` 在 19 上会直接报 `无法识别的配置参数`。要看排序规则得换写法：
+
+```sql
+select datname, datcollate, datctype from pg_database;
+```
+
+这个变化不在官方 19 的兼容性清单里，属于"文档没写、实际变了"的那类。**任何依赖 `SHOW lc_collate` 的备份脚本、监控探针、ORM 初始化代码，在 19 上都会失败**——如果哪天你的运维脚本突然在排序规则这行报错，先想想是不是升级了数据库。
+
+另外，本文里的域名统一用 `example.com` 占位，避免把真实站点信息留在公开文章里。
