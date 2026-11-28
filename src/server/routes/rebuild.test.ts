@@ -20,7 +20,9 @@ beforeEach(async () => {
 
 describe("rebuild routes", () => {
 	it("requires auth", async () => {
-		expect((await apiApp.request("/api/admin/rebuild", { method: "POST" })).status).toBe(401);
+		expect(
+			(await apiApp.request("/api/admin/rebuild", { method: "POST" })).status,
+		).toBe(401);
 		expect((await apiApp.request("/api/admin/rebuild")).status).toBe(401);
 	});
 
@@ -34,7 +36,10 @@ describe("rebuild routes", () => {
 	});
 
 	it("returns 409 while another rebuild is running", async () => {
-		fs.writeFileSync(process.env.REBUILD_SCRIPT as string, "#!/bin/bash\nexit 0\n");
+		fs.writeFileSync(
+			process.env.REBUILD_SCRIPT as string,
+			"#!/bin/bash\nexit 0\n",
+		);
 		fs.writeFileSync(process.env.REBUILD_FLAG as string, "");
 		const res = await apiApp.request("/api/admin/rebuild", {
 			method: "POST",
@@ -45,10 +50,15 @@ describe("rebuild routes", () => {
 	});
 
 	it("reports running state and log tail", async () => {
-		fs.writeFileSync(process.env.REBUILD_LOG as string, "=== 重建开始 ===\n同步文章\n");
+		fs.writeFileSync(
+			process.env.REBUILD_LOG as string,
+			"=== 重建开始 ===\n同步文章\n",
+		);
 		fs.writeFileSync(process.env.REBUILD_FLAG as string, "");
 
-		const res = await apiApp.request("/api/admin/rebuild", { headers: { cookie } });
+		const res = await apiApp.request("/api/admin/rebuild", {
+			headers: { cookie },
+		});
 		expect(res.status).toBe(200);
 		const body = await res.json();
 		expect(body.data.running).toBe(true);
@@ -56,7 +66,9 @@ describe("rebuild routes", () => {
 	});
 
 	it("reports idle when no flag and no log", async () => {
-		const res = await apiApp.request("/api/admin/rebuild", { headers: { cookie } });
+		const res = await apiApp.request("/api/admin/rebuild", {
+			headers: { cookie },
+		});
 		const body = await res.json();
 		expect(body.data.running).toBe(false);
 		expect(body.data.tail).toBe("");

@@ -25,9 +25,7 @@ export async function recordStatusCheck(
 }
 
 /** 按小时聚合最近 N 小时的状态记录 */
-export async function getStatusHistory(
-	hours: number,
-): Promise<StatusBucket[]> {
+export async function getStatusHistory(hours: number): Promise<StatusBucket[]> {
 	const { db, t } = await getDb();
 	const dialect = getDialect();
 
@@ -72,5 +70,7 @@ export async function pruneStatusChecks(keepDays = 7): Promise<void> {
 		dialect === "postgres"
 			? sql`now() - (${keepDays} * interval '1 day')`
 			: sql`datetime('now', ${`-${keepDays} days`})`;
-	await db.delete(t.statusChecks).where(sql`${t.statusChecks.checkedAt} < ${cutoff}`);
+	await db
+		.delete(t.statusChecks)
+		.where(sql`${t.statusChecks.checkedAt} < ${cutoff}`);
 }

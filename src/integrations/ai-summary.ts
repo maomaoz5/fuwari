@@ -15,7 +15,11 @@ import { ensureCacheDir } from "../utils/ai-summary-cache.ts";
  * 缓存以正文内容的 hash 判重，任一侧解析方式不同都会导致「永远判不中、每次构建都重调 AI」。
  * 早期这里用手写正则，遇到 CRLF 文件会匹配失败，导致 title 为空且正文混入 frontmatter。
  */
-function parsePost(raw: string): { title: string; draft: boolean; content: string } {
+function parsePost(raw: string): {
+	title: string;
+	draft: boolean;
+	content: string;
+} {
 	const { data, content } = matter(raw);
 	return {
 		title: typeof data.title === "string" ? data.title : "",

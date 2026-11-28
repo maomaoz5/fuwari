@@ -143,10 +143,13 @@ describe("ai-summary routes", () => {
 			"fetch",
 			vi.fn(
 				async () =>
-					new Response(JSON.stringify({ choices: [{ message: { content: null } }] }), {
-						status: 200,
-						headers: { "Content-Type": "application/json" },
-					}),
+					new Response(
+						JSON.stringify({ choices: [{ message: { content: null } }] }),
+						{
+							status: 200,
+							headers: { "Content-Type": "application/json" },
+						},
+					),
 			),
 		);
 		const res = await apiApp.request("/api/admin/ai-summary/hello", {

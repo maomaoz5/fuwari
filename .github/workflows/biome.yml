@@ -15,6 +15,9 @@ jobs:
       - name: Setup Biome
         uses: biomejs/setup-biome@f382a98e582959e6aaac8e5f8b17b31749018780 # v2.5.0
         with:
-          version: latest
+          # 与 package.json 的 devDependency 保持一致。
+          # 之前用 latest 导致 CI 悄悄换版本（新版还会检查 markdown），
+          # 本地通过、CI 报错，很难排查。
+          version: 2.5.6
       - name: Run Biome
         run: biome ci ./src --reporter=github

@@ -20,9 +20,7 @@ function buildBodies(resetUrl: string) {
 
 function senderAddress(): string {
 	return (
-		process.env.MAIL_FROM ||
-		process.env.SMTP_FROM ||
-		"noreply@maomaoz.org"
+		process.env.MAIL_FROM || process.env.SMTP_FROM || "noreply@maomaoz.org"
 	);
 }
 

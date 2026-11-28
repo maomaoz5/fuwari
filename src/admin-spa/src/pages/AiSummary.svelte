@@ -40,7 +40,9 @@ async function regenerate(slug) {
 	regeneratingSlug = slug;
 	error = "";
 	try {
-		const result = await api(`/api/admin/ai-summary/${slug}`, { method: "POST" });
+		const result = await api(`/api/admin/ai-summary/${slug}`, {
+			method: "POST",
+		});
 		success = `已重新生成 ${slug} 的摘要（${result?.title ?? ""}）`;
 		setTimeout(() => (success = ""), 4000);
 		await loadSummaries();

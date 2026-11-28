@@ -24,7 +24,8 @@ aiSummaryRoutes.delete("/admin/ai-summary/:slug", requireAuth, (c) => {
 	const slug = c.req.param("slug");
 	if (!validateSlug(slug))
 		return fail(c, 400, "invalid_slug", "Invalid slug format");
-	if (!deleteSummary(slug)) return fail(c, 404, "not_found", "AI summary not found");
+	if (!deleteSummary(slug))
+		return fail(c, 404, "not_found", "AI summary not found");
 	return ok(c, { slug });
 });
 

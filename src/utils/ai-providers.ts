@@ -46,8 +46,7 @@ async function fetchWithRetry(
 		if (response.status === 429) {
 			if (attempt < MAX_RETRIES) {
 				const delay =
-					BACKOFF_DELAYS[attempt] ??
-					BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
+					BACKOFF_DELAYS[attempt] ?? BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
 				console.warn(
 					`[ai-provider] Rate limited (429). Retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})...`,
 				);

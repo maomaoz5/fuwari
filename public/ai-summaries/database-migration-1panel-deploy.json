@@ -1,6 +1,6 @@
 {
   "title": "博客数据库迁移：从 SQLite 到 PostgreSQL + 1Panel 部署指南",
-  "summary": "本文介绍了个人博客最初使用 SQLite 的优势，但在正式上线时并发、安全和备份等限制迫使作者采用双数据库方案。通过抽象出 `DbDriver` 接口实现 SQLite 和 PostgreSQL 驱动，并借助 `DB_TYPE` 环境变量实现无缝切换，开发时保持零配置，生产环境则使用更健壮的 PostgreSQL。文章详细介绍了 PostgreSQL 的安装、数据库创建、连接字符串 URL 编码以及 1Panel（历史）部署流程，同时强调了安全事项（密码重置、数据迁移等）。这种设计使上层业务代码无需改动，既灵活又易于维护。",
-  "generatedAt": "2026-11-14T08:11:59.211Z",
-  "contentHash": "cf29e56e294a0fcaf8dc8cb7810aaecfe987082bcdc1117a26838dc77cec1ffe"
+  "summary": "博客最初使用 SQLite，因其零配置、单文件特性适合本地开发，但生产环境需要更可靠的 PostgreSQL，于是通过环境变量 `DB_TYPE` 实现 SQLite 与 PostgreSQL 的无缝切换。核心是基于 `DbDriver` 接口抽象数据库操作，分别提供 `db-sqlite`（better‑sqlite3）和 `db-postgres`（pg）两种驱动，业务代码无需修改。部署时需在 1Panel（或系统包）中安装 PostgreSQL，创建用户和数据库，并在 `.env` 中配置 `DATABASE_URL`（密码特殊字符需 URL 编码），使用 PM2 管理 Node.js 进程并通过 Nginx（或 HAProxy）反向代理。首次启动会自动建表并创建默认管理员，生产环境请及时修改默认密码，且可通过 `CREATE_DEFAULT_ADMIN` 关闭自动创建。",
+  "generatedAt": "2026-11-28T07:07:51.727Z",
+  "contentHash": "af08ce021f3a5db7bd2e4616aaff9fdf3f61d71184813ea9afeff86e42829aaa"
 }

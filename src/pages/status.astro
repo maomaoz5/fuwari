@@ -1,8 +1,8 @@
 ---
 export const prerender = true;
 
-import MainGridLayout from "../layouts/MainGridLayout.astro";
 import { siteConfig } from "../config";
+import MainGridLayout from "../layouts/MainGridLayout.astro";
 
 // 文案内联：避免为两个词去改 10 个语言文件
 const zh = siteConfig.lang.toLowerCase().startsWith("zh");
@@ -14,9 +14,13 @@ const t = {
 	refresh: zh ? "重新检测" : "Refresh",
 	checking: zh ? "检测中…" : "Checking…",
 	webLabel: zh ? "站点页面" : "Web page",
-	webNote: zh ? "你正在浏览的页面，已正常渲染" : "This page rendered successfully",
+	webNote: zh
+		? "你正在浏览的页面，已正常渲染"
+		: "This page rendered successfully",
 	healthLabel: zh ? "API 存活" : "API liveness",
-	healthNote: zh ? "进程存活探针，不访问数据库" : "Process liveness, no database access",
+	healthNote: zh
+		? "进程存活探针，不访问数据库"
+		: "Process liveness, no database access",
 	readyLabel: zh ? "数据库就绪" : "Database readiness",
 	readyNote: zh ? "真实查询一次数据库后返回" : "Issues a real database query",
 	allOk: zh ? "所有服务正常" : "All systems operational",
@@ -26,7 +30,9 @@ const t = {
 	lastChecked: zh ? "最后检查" : "Last checked",
 	partialFmt: zh ? "部分服务异常" : "Partial outage",
 	histTitle: zh ? "近 24 小时" : "Last 24 hours",
-	histEmpty: zh ? "暂无历史数据，采集器每分钟记录一次" : "No history yet — collected every minute",
+	histEmpty: zh
+		? "暂无历史数据，采集器每分钟记录一次"
+		: "No history yet — collected every minute",
 	uptimeLabel: zh ? "可用率" : "Uptime",
 	avgLabel: zh ? "平均响应" : "Avg response",
 	samplesLabel: zh ? "采样" : "Samples",
@@ -35,7 +41,12 @@ const t = {
 // 复用现有探针：/api/__health 与 /api/__ready（见 src/server/app.ts）
 const checks = [
 	{ id: "web", label: t.webLabel, note: t.webNote, url: null },
-	{ id: "health", label: t.healthLabel, note: t.healthNote, url: "/api/__health" },
+	{
+		id: "health",
+		label: t.healthLabel,
+		note: t.healthNote,
+		url: "/api/__health",
+	},
 	{ id: "ready", label: t.readyLabel, note: t.readyNote, url: "/api/__ready" },
 ];
 ---
